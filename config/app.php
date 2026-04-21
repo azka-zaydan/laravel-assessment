@@ -123,4 +123,13 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Challenge Token
+    |--------------------------------------------------------------------------
+    */
+
+    'jwt_challenge_secret' => env('JWT_CHALLENGE_SECRET'),
+    'jwt_challenge_ttl_minutes' => (int) env('JWT_CHALLENGE_TTL_MINUTES', 5),
+
 ];
