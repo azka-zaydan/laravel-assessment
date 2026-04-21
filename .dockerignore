@@ -3,11 +3,11 @@
 .gitattributes
 .gitignore
 
-# Node / frontend build artefacts (not needed in the PHP image)
+# Node / frontend build artefacts (package-lock.json kept — needed for `npm ci`
+# in the frontend build stage).
 node_modules/
 npm-debug.log
 yarn-error.log
-package-lock.json
 yarn.lock
 
 # Composer deps (rebuilt inside the image)
@@ -35,13 +35,10 @@ pest.php
 PLAN.md
 README.md
 
-# CI / tooling
+# CI / tooling (tsconfig/vite.config/components/biome are needed by the
+# frontend build stage, so keep them in the context).
 .github/
 .editorconfig
-biome.json
-tsconfig.json
-vite.config.ts
-components.json
 .npmrc
 
 # Docker artefacts themselves (avoid recursive COPY confusion)
