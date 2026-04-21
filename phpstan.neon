@@ -1,0 +1,14 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - app/
+        - database/
+        - config/
+        - routes/
+    ignoreErrors:
+        # Default Laravel skeleton: env() returns bool|string, rtrim expects string.
+        - message: '#rtrim.*expects string, bool\|string given#'
+          path: config/filesystems.php
