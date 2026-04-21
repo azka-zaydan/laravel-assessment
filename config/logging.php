@@ -1,13 +1,10 @@
 <?php
 
 use App\Logging\TapRedactor;
-use App\Support\Logging\RedactContextProcessor;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
-
-$redactKeys = array_map('trim', explode(',', (string) env('LOG_REDACT_KEYS', 'password,token,secret,authorization,cookie')));
 
 return [
 
@@ -54,7 +51,7 @@ return [
     |
     */
 
-    'redact_keys' => $redactKeys,
+    'redact_keys' => array_map('trim', explode(',', (string) env('LOG_REDACT_KEYS', 'password,token,secret,authorization,cookie'))),
 
     'api_retention_days' => (int) env('API_LOG_RETENTION_DAYS', 30),
 
@@ -114,10 +111,8 @@ return [
                 'stream' => 'php://stderr',
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [
-                PsrLogMessageProcessor::class,
-                fn () => new RedactContextProcessor($redactKeys),
-            ],
+            'processors' => [PsrLogMessageProcessor::class],
+            'tap' => [TapRedactor::class],
         ],
 
         'syslog' => [
