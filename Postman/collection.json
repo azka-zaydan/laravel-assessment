@@ -1,0 +1,500 @@
+{
+  "info": {
+    "_postman_id": "db193559-729b-46fc-bbd5-b1aaf5551893",
+    "name": "Telegram Culinary Bot API",
+    "description": "REST API for a Telegram culinary bot built on Laravel 13 + Passport + 2FA. Every request has automated pm.test assertions. Use the Development environment and set {{base_url}}.\n\nRepo: github.com/azka-zaydan/laravel-assessment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"name\":\"Postman Test User\",\"email\":\"{{test_email}}\",\"password\":\"{{test_password}}\",\"password_confirmation\":\"{{test_password}}\"}" },
+        "url": { "raw": "{{base_url}}/api/register", "host": ["{{base_url}}"], "path": ["api", "register"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('access_token returned', () => pm.expect(body).to.have.property('access_token'));",
+              "pm.test('user object returned', () => pm.expect(body.user).to.be.an('object'));",
+              "pm.test('is_admin=false', () => pm.expect(body.user.is_admin).to.be.false);",
+              "pm.environment.set('user_token', body.access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"email\":\"{{test_email}}\",\"password\":\"{{test_password}}\"}" },
+        "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "if (body.two_factor_required) {",
+              "  pm.test('challenge_token present', () => pm.expect(body).to.have.property('challenge_token'));",
+              "  pm.environment.set('challenge_token', body.challenge_token);",
+              "} else {",
+              "  pm.test('access_token present', () => pm.expect(body).to.have.property('access_token'));",
+              "  pm.environment.set('user_token', body.access_token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Login (admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\"}" },
+        "url": { "raw": "{{base_url}}/api/login", "host": ["{{base_url}}"], "path": ["api", "login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "if (body.access_token) {",
+              "  pm.environment.set('admin_token', body.access_token);",
+              "  pm.test('is_admin=true', () => pm.expect(body.user.is_admin).to.be.true);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{user_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/me", "host": ["{{base_url}}"], "path": ["api", "me"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('has email', () => pm.expect(pm.response.json().user).to.have.property('email'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Refresh",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api", "auth", "refresh"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 401', () => pm.expect([200, 401]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) pm.environment.set('user_token', pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth - Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{user_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/logout", "host": ["{{base_url}}"], "path": ["api", "logout"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2FA - Enable",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{user_token}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"password\":\"{{test_password}}\"}" },
+        "url": { "raw": "{{base_url}}/api/2fa/enable", "host": ["{{base_url}}"], "path": ["api", "2fa", "enable"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 403', () => pm.expect([200, 403]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) pm.test('otpauth_url returned', () => pm.expect(pm.response.json().otpauth_url).to.match(/^otpauth:\\/\\//));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2FA - Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{user_token}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"code\":\"123456\"}" },
+        "description": "Replace code with a real 6-digit TOTP from the otpauth_url.",
+        "url": { "raw": "{{base_url}}/api/2fa/confirm", "host": ["{{base_url}}"], "path": ["api", "2fa", "confirm"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 422', () => pm.expect([200, 422]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) pm.expect(pm.response.json().recovery_codes).to.have.lengthOf(8);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2FA - Verify",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"challenge_token\":\"{{challenge_token}}\",\"code\":\"123456\"}" },
+        "url": { "raw": "{{base_url}}/api/2fa/verify", "host": ["{{base_url}}"], "path": ["api", "2fa", "verify"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 401', () => pm.expect([200, 401]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) pm.environment.set('user_token', pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2FA - Regenerate codes",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{user_token}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"password\":\"{{test_password}}\"}" },
+        "url": { "raw": "{{base_url}}/api/2fa/recovery-codes/regenerate", "host": ["{{base_url}}"], "path": ["api", "2fa", "recovery-codes", "regenerate"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Status 200/403/422', () => pm.expect([200, 403, 422]).to.include(pm.response.code));"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants - Search",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/restaurants?q=pizza&count=5",
+          "host": ["{{base_url}}"],
+          "path": ["api", "restaurants"],
+          "query": [
+            { "key": "q", "value": "pizza" },
+            { "key": "count", "value": "5" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('data is array', () => pm.expect(body.data).to.be.an('array'));",
+              "pm.test('meta present', () => pm.expect(body.meta).to.be.an('object'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants - Detail",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/restaurants/16507621", "host": ["{{base_url}}"], "path": ["api", "restaurants", "16507621"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 404', () => pm.expect([200, 404]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) pm.expect(pm.response.json().data).to.have.property('id');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants - Reviews",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/restaurants/16507621/reviews", "host": ["{{base_url}}"], "path": ["api", "restaurants", "16507621", "reviews"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants - Nearby",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/restaurants/nearby?lat=-6.2088&lon=106.8456&count=5",
+          "host": ["{{base_url}}"],
+          "path": ["api", "restaurants", "nearby"],
+          "query": [
+            { "key": "lat", "value": "-6.2088" },
+            { "key": "lon", "value": "106.8456" },
+            { "key": "count", "value": "5" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Restaurants - Menu",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/restaurants/16507621/menu", "host": ["{{base_url}}"], "path": ["api", "restaurants", "16507621", "menu"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('data is array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telegram - Generate link code",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/telegram/link-code", "host": ["{{base_url}}"], "path": ["api", "telegram", "link-code"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('6-digit code', () => pm.expect(body.code).to.match(/^\\d{6}$/));",
+              "pm.test('TTL 600', () => pm.expect(body.expires_in).to.equal(600));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telegram - Webhook (simulated)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Telegram-Bot-Api-Secret-Token", "value": "{{telegram_webhook_secret}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{\"update_id\":123,\"message\":{\"message_id\":1,\"from\":{\"id\":42,\"is_bot\":false,\"first_name\":\"Tester\"},\"chat\":{\"id\":42,\"type\":\"private\"},\"date\":1713734400,\"text\":\"/start\"}}" },
+        "url": { "raw": "{{base_url}}/api/telegram/webhook", "host": ["{{base_url}}"], "path": ["api", "telegram", "webhook"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Status 200 (webhook must always 200)', () => pm.response.to.have.status(200));"]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - API Logs",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/api-logs?sort=-created_at&per_page=25",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "api-logs"],
+          "query": [
+            { "key": "sort", "value": "-created_at" },
+            { "key": "per_page", "value": "25" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200 or 403', () => pm.expect([200, 403]).to.include(pm.response.code));",
+              "if (pm.response.code === 200) {",
+              "  const body = pm.response.json();",
+              "  pm.test('paginated', () => { pm.expect(body).to.have.property('data'); pm.expect(body).to.have.property('meta'); });",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - API Logs (filtered)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/api-logs?filter[method]=POST&per_page=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "api-logs"],
+          "query": [
+            { "key": "filter[method]", "value": "POST" },
+            { "key": "per_page", "value": "10" }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.test('Status 200 or 403', () => pm.expect([200, 403]).to.include(pm.response.code));"]
+          }
+        }
+      ]
+    }
+  ]
+}

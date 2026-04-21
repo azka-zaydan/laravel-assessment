@@ -12,7 +12,7 @@ This table maps each grading criterion directly to the code that satisfies it.
 |---|-----------|----------------|
 | **a** | JWT/Passport authentication + 2FA | Laravel Passport 13 issues JWT access tokens. `POST /api/login` returns either a full token (2FA off) or a short-lived challenge token (`firebase/php-jwt`, `JWT_CHALLENGE_SECRET`). TOTP via `pragmarx/google2fa-laravel`. Full flow in [`app/Http/Controllers/Api/AuthController.php`](app/Http/Controllers/Api/AuthController.php), [`app/Http/Controllers/Api/TwoFactorController.php`](app/Http/Controllers/Api/TwoFactorController.php), [`app/Services/Auth/`](app/Services/Auth/), [`app/Http/Middleware/Require2FA.php`](app/Http/Middleware/Require2FA.php). |
 | **b** | All data in PostgreSQL | `DB_CONNECTION=pgsql` in [`.env.example`](.env.example). Tables: `users`, `restaurants`, `reviews`, `menu_items`, `api_logs`, `telegram_users`, `user_submissions`, `oauth_*`. Write-through caching via [`app/Repositories/RestaurantRepository.php`](app/Repositories/RestaurantRepository.php): every provider response is upserted to Postgres and mirrored in Redis. |
-| **c** | Postman docs + automated tests | Collection at `Postman/collection.json`, environment at `Postman/environment.json`. Published docs: `{{POSTMAN_DOCS_URL}}` *(fill in after publishing)*. Auto-generated Swagger UI via Scramble at `/docs/api`. Newman integration tests run in CI (job `postman` in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). |
+| **c** | Postman docs + automated tests | Collection at `Postman/collection.json`, environment at `Postman/environment.json`. Published docs: https://documenter.getpostman.com/view/21013457/2sBXqFM2oa. Auto-generated Swagger UI via Scramble at `/docs/api`. Newman integration tests run in CI (job `postman` in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). |
 | **d** | Design patterns | 9 patterns documented in [`DESIGN_PATTERNS.md`](DESIGN_PATTERNS.md): Repository, Service, Strategy (3 sites), Observer, Singleton, Facade, Pipeline, Adapter, Command. |
 | **e** | Git + CI/CD | GitHub Actions at [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Pint · PHPStan level 8 · Pest 144 tests · TypeScript/Biome/Vite · Newman). Railway native GitHub integration deploys `main` automatically after all gates pass. |
 | **f** | Request metadata logging + admin UI | [`app/Http/Middleware/LogApiRequest.php`](app/Http/Middleware/LogApiRequest.php) captures method, path, IP, user-agent, headers (jsonb), body (jsonb), response status, duration, request_id (ULID). Admin API at `GET /api/admin/api-logs` ([`app/Http/Controllers/Api/Admin/ApiLogController.php`](app/Http/Controllers/Api/Admin/ApiLogController.php)). React admin pages at [`resources/js/admin/routes/logs.tsx`](resources/js/admin/routes/logs.tsx) (filter, paginate, table) and [`resources/js/admin/routes/login.tsx`](resources/js/admin/routes/login.tsx). |
@@ -242,7 +242,9 @@ All CI jobs mirror these commands exactly — see [`.github/workflows/ci.yml`](.
 
 ## Postman
 
-**Published docs URL:** `{{POSTMAN_DOCS_URL}}`
+**Published docs URL:** https://documenter.getpostman.com/view/21013457/2sBXqFM2oa
+
+**Public workspace:** https://www.postman.com/gold-capsule-253428/workspace/3286fe3e-15c3-43d6-bdf1-82c67dfc81a7
 *(Replace this placeholder after publishing the collection to the public Postman network.)*
 
 **Local import:**
