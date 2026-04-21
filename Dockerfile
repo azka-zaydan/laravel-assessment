@@ -1,4 +1,19 @@
 # ============================================================
+# Stage 1a — Frontend build (Vite → public/build)
+# ============================================================
+FROM node:22-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY vite.config.ts tsconfig.json components.json biome.json ./
+COPY resources/ resources/
+
+RUN npm run build
+
+# ============================================================
 # Stage 1 — Composer dependencies (cached layer)
 # ============================================================
 FROM composer:2 AS composer
@@ -70,6 +85,9 @@ COPY public/ public/
 COPY resources/ resources/
 COPY routes/ routes/
 COPY storage/ storage/
+
+# Vite-built frontend assets (public/build/*).
+COPY --from=frontend /app/public/build /app/public/build
 
 # ── Docker support files ──────────────────────────────────────────────────────
 COPY docker/ docker/
