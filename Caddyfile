@@ -3,6 +3,9 @@
 		worker /app/public/index.php
 	}
 
+	order php_server before file_server
+	order php before file_server
+
 	admin off
 	auto_https off
 }
