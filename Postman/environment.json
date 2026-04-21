@@ -5,7 +5,7 @@
         { "key": "base_url", "value": "http://localhost:8000", "type": "default", "enabled": true },
         {
             "key": "telegram_webhook_url",
-            "value": "https://laravel.catatkeu.app/api/telegram/webhook",
+            "value": "https://your-domain.example/api/telegram/webhook",
             "type": "default",
             "enabled": true
         },

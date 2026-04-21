@@ -69,8 +69,6 @@ HTTP Request
 
 **Async processing:** The Telegram webhook controller dispatches `ProcessTelegramUpdate` to the Redis queue and returns `200` immediately. `LogApiRequestJob` is similarly async so logging adds zero latency to the HTTP response path.
 
-For full design rationale, auth-flow diagrams, and data-model tables see [`PLAN.md`](PLAN.md).
-
 ---
 
 ## Design Patterns
@@ -260,7 +258,7 @@ All CI jobs mirror these commands exactly — see [`.github/workflows/ci.yml`](.
 | `admin_token` | Run the **Login** request as the seeded admin — the test script auto-extracts it |
 | `user_token` | Run **Register** then **Login** as a regular user |
 | `challenge_token` | Returned by **Login** when 2FA is enabled — auto-extracted by test script |
-| `telegram_webhook_url` | Your deployed URL, e.g. `https://laravel.catatkeu.app/api/telegram/webhook` |
+| `telegram_webhook_url` | Your deployed URL, e.g. `https://your-domain.example/api/telegram/webhook` |
 
 Every request includes: HTTP status assertion, JSON-schema validation, and token auto-extraction where applicable.
 
@@ -345,7 +343,7 @@ railway variables --set \
   JWT_CHALLENGE_SECRET="$(openssl rand -hex 64)" \
   TELEGRAM_BOT_TOKEN="<your-bot-token>" \
   TELEGRAM_WEBHOOK_SECRET="$(openssl rand -hex 32)" \
-  TELEGRAM_WEBHOOK_URL="https://laravel.catatkeu.app/api/telegram/webhook" \
+  TELEGRAM_WEBHOOK_URL="https://your-domain.example/api/telegram/webhook" \
   SEED_ADMIN_EMAIL="admin@your-domain.com" \
   SEED_ADMIN_PASSWORD="$(openssl rand -base64 16)" \
   RESTAURANT_PROVIDER=mock
@@ -356,7 +354,7 @@ railway variables --set \
 
 ### Cloudflare
 
-In the Cloudflare dashboard for `catatkeu.app`, add a CNAME record:
+In your Cloudflare dashboard, add a CNAME record on the zone you want to serve the API from:
 
 | Field | Value |
 |-------|-------|
