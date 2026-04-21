@@ -1,7 +1,5 @@
 {
-	frankenphp {
-		worker /app/public/index.php
-	}
+	frankenphp
 
 	order php_server before file_server
 	order php before file_server
