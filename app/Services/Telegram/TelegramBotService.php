@@ -27,7 +27,15 @@ class TelegramBotService
     {
         try {
             $response = Http::timeout(10)
-                ->retry(2, 200, fn (mixed $exception) => $exception instanceof RequestException && $exception->response->serverError())
+                ->retry(2, 200, function (mixed $exception): bool {
+                    // RequestException only fires for HTTP error responses; retry on 5xx.
+                    // Anything else (ConnectionException, TransferException, etc.) is network-level — retry.
+                    if (! $exception instanceof RequestException) {
+                        return true;
+                    }
+
+                    return $exception->response->serverError();
+                })
                 ->post("{$this->baseUrl()}/{$method}", $params);
         } catch (RequestException $e) {
             throw new TelegramApiException(

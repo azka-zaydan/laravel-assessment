@@ -4,7 +4,10 @@ namespace App\Services\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use PragmaRX\Google2FA\Exceptions\Google2FAException;
 use PragmaRX\Google2FA\Google2FA;
+use Throwable;
 
 class TwoFactorService
 {
@@ -42,7 +45,14 @@ class TwoFactorService
             $result = $this->google2fa->verifyKey($secret, $code);
 
             return $result !== false;
-        } catch (\Throwable) {
+        } catch (Google2FAException) {
+            return false;
+        } catch (Throwable $e) {
+            Log::error('2fa.verify_totp.unexpected_exception', [
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+            ]);
+
             return false;
         }
     }

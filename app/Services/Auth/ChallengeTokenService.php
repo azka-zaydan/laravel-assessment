@@ -3,9 +3,14 @@
 namespace App\Services\Auth;
 
 use App\Models\User;
+use Firebase\JWT\BeforeValidException;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Firebase\JWT\SignatureInvalidException;
+use Illuminate\Support\Facades\Log;
 use Throwable;
+use UnexpectedValueException;
 
 class ChallengeTokenService
 {
@@ -49,22 +54,29 @@ class ChallengeTokenService
     {
         try {
             $decoded = JWT::decode($token, new Key($this->secret(), self::ALGORITHM));
+        } catch (ExpiredException|BeforeValidException|SignatureInvalidException|UnexpectedValueException) {
+            return null;
+        } catch (Throwable $e) {
+            Log::error('challenge_token.verify.unexpected_exception', [
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+            ]);
 
-            $purpose = isset($decoded->purpose) ? (string) $decoded->purpose : '';
-
-            if ($purpose !== '2fa_challenge') {
-                return null;
-            }
-
-            $sub = isset($decoded->sub) ? (int) $decoded->sub : 0;
-
-            if ($sub === 0) {
-                return null;
-            }
-
-            return ['user_id' => $sub];
-        } catch (Throwable) {
             return null;
         }
+
+        $purpose = isset($decoded->purpose) ? (string) $decoded->purpose : '';
+
+        if ($purpose !== '2fa_challenge') {
+            return null;
+        }
+
+        $sub = isset($decoded->sub) ? (int) $decoded->sub : 0;
+
+        if ($sub === 0) {
+            return null;
+        }
+
+        return ['user_id' => $sub];
     }
 }

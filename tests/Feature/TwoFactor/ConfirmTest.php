@@ -64,6 +64,31 @@ it('returns 422 for an invalid TOTP code', function () {
         ->assertStatus(422);
 });
 
+it('rejects a second confirm after 2FA already enabled without rotating recovery codes', function () {
+    $user = User::factory()->create(['password' => bcrypt('Password1!')]);
+
+    [$accessToken, $secret] = setupTwoFactorEnable($user);
+
+    $code = otpFor($secret);
+
+    $firstResponse = $this->withToken($accessToken)
+        ->postJson('/api/2fa/confirm', ['code' => $code])
+        ->assertStatus(200);
+
+    $firstCodes = $firstResponse->json('recovery_codes');
+
+    $user->refresh();
+    $storedBefore = $user->two_factor_recovery_codes;
+
+    $this->withToken($accessToken)
+        ->postJson('/api/2fa/confirm', ['code' => otpFor($secret)])
+        ->assertStatus(403);
+
+    $user->refresh();
+    expect($user->two_factor_recovery_codes)->toBe($storedBefore);
+    expect($firstCodes)->toBeArray()->toHaveCount(8);
+});
+
 it('returns plaintext recovery codes in response; stored codes in DB are bcrypt-hashed', function () {
     $user = User::factory()->create(['password' => bcrypt('Password1!')]);
 
