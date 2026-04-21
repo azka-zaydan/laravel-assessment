@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\Require2FA;
+use App\Http\Middleware\RequireTwoFactorConfirmed;
+use App\Http\Middleware\ValidateTelegramSecret;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'require_2fa' => Require2FA::class,
+            'require_2fa_confirmed' => RequireTwoFactorConfirmed::class,
+            'telegram.secret' => ValidateTelegramSecret::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -1,0 +1,34 @@
+{
+    "update_id": 100000006,
+    "callback_query": {
+        "id": "cb_query_id_001",
+        "from": {
+            "id": 123456789,
+            "is_bot": false,
+            "first_name": "John",
+            "last_name": "Doe",
+            "username": "johndoe",
+            "language_code": "en"
+        },
+        "message": {
+            "message_id": 10,
+            "from": {
+                "id": 7777777777,
+                "is_bot": true,
+                "first_name": "RestaurantBot",
+                "username": "restaurantbot"
+            },
+            "chat": {
+                "id": 123456789,
+                "first_name": "John",
+                "last_name": "Doe",
+                "username": "johndoe",
+                "type": "private"
+            },
+            "date": 1745200005,
+            "text": "Select an action for a restaurant:"
+        },
+        "chat_instance": "1234567890123456789",
+        "data": "menu:16507621"
+    }
+}

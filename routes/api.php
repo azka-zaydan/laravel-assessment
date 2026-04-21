@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\Admin\ApiLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\TelegramLinkController;
+use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Controllers\Api\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -67,3 +69,14 @@ Route::middleware(['auth:api', 'require_2fa'])->prefix('restaurants')->group(fun
     Route::get('/{id}/reviews', [RestaurantController::class, 'reviews'])->whereNumber('id');
     Route::get('/{id}/menu', [RestaurantController::class, 'menu'])->whereNumber('id');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Telegram routes
+|--------------------------------------------------------------------------
+*/
+Route::post('/telegram/webhook', TelegramWebhookController::class)
+    ->middleware('telegram.secret');
+
+Route::post('/telegram/link-code', TelegramLinkController::class)
+    ->middleware(['auth:api', 'require_2fa_confirmed']);
