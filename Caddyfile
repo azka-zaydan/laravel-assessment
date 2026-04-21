@@ -1,27 +1,24 @@
 {
-	frankenphp
+	frankenphp {
+		worker /app/public/index.php {$FRANKENPHP_NUM_THREADS:auto}
+	}
 
 	admin off
 	auto_https off
 }
 
 :{$PORT:8000} {
+	root * /app/public
 	encode gzip zstd
 
-	root * /app/public
-
-	@staticFiles {
+	# file_server serves static files directly; otherwise hand off to PHP worker.
+	@static {
 		file
 		not path /index.php
 	}
-	handle @staticFiles {
+	handle @static {
 		file_server
 	}
 
-	php_server {
-		worker {
-			file /app/public/index.php
-			num {$FRANKENPHP_NUM_THREADS:auto}
-		}
-	}
+	php_server
 }
