@@ -1,42 +1,42 @@
 {
-  "daily_menus": [
-    {
-      "daily_menu": {
-        "daily_menu_id": "7001",
-        "name": "Lunch Special Menu",
-        "start_date": "2026-04-21 11:00:00",
-        "end_date": "2026-04-21 15:00:00",
-        "dishes": [
-          {
-            "dish": {
-              "dish_id": "301",
-              "name": "Margherita Pizza",
-              "price": "Rp 85.000"
+    "daily_menus": [
+        {
+            "daily_menu": {
+                "daily_menu_id": "7001",
+                "name": "Lunch Special Menu",
+                "start_date": "2026-04-21 11:00:00",
+                "end_date": "2026-04-21 15:00:00",
+                "dishes": [
+                    {
+                        "dish": {
+                            "dish_id": "301",
+                            "name": "Margherita Pizza",
+                            "price": "Rp 85.000"
+                        }
+                    },
+                    {
+                        "dish": {
+                            "dish_id": "302",
+                            "name": "Diavola Pizza",
+                            "price": "Rp 95.000"
+                        }
+                    },
+                    {
+                        "dish": {
+                            "dish_id": "303",
+                            "name": "Quattro Stagioni",
+                            "price": "Rp 105.000"
+                        }
+                    },
+                    {
+                        "dish": {
+                            "dish_id": "304",
+                            "name": "Tiramisu",
+                            "price": "Rp 45.000"
+                        }
+                    }
+                ]
             }
-          },
-          {
-            "dish": {
-              "dish_id": "302",
-              "name": "Diavola Pizza",
-              "price": "Rp 95.000"
-            }
-          },
-          {
-            "dish": {
-              "dish_id": "303",
-              "name": "Quattro Stagioni",
-              "price": "Rp 105.000"
-            }
-          },
-          {
-            "dish": {
-              "dish_id": "304",
-              "name": "Tiramisu",
-              "price": "Rp 45.000"
-            }
-          }
-        ]
-      }
-    }
-  ]
+        }
+    ]
 }

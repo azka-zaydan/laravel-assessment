@@ -10,6 +10,7 @@ use App\Http\Requests\TwoFactor\VerifyRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\ChallengeTokenService;
+use App\Services\Auth\RecoveryVerified;
 use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TwoFactorService;
 use Illuminate\Http\JsonResponse;
@@ -208,8 +209,8 @@ class TwoFactorController extends Controller
             );
         }
 
-        if ($result['method'] === 'recovery' && isset($result['remaining_codes'])) {
-            $user->two_factor_recovery_codes = $result['remaining_codes'];
+        if ($result instanceof RecoveryVerified) {
+            $user->two_factor_recovery_codes = $result->remainingCodes;
         }
 
         $user->two_factor_confirmed_at = now();
@@ -217,7 +218,7 @@ class TwoFactorController extends Controller
 
         Log::info('2fa.verify.success', [
             'user_id' => $user->id,
-            'method' => $result['method'],
+            'method' => $result->method(),
             'ip' => $request->ip(),
         ]);
 

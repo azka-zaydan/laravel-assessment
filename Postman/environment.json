@@ -1,18 +1,23 @@
 {
-  "id": "754accc9-d9a7-48e0-83a7-dbf2f597c397",
-  "name": "Development",
-  "values": [
-    { "key": "base_url", "value": "http://localhost:8000", "type": "default", "enabled": true },
-    { "key": "telegram_webhook_url", "value": "https://laravel.catatkeu.app/api/telegram/webhook", "type": "default", "enabled": true },
-    { "key": "telegram_webhook_secret", "value": "", "type": "secret", "enabled": true },
-    { "key": "test_email", "value": "newbie@example.test", "type": "default", "enabled": true },
-    { "key": "test_password", "value": "Password123", "type": "secret", "enabled": true },
-    { "key": "admin_email", "value": "admin@example.test", "type": "default", "enabled": true },
-    { "key": "admin_password", "value": "password", "type": "secret", "enabled": true },
-    { "key": "user_token", "value": "", "type": "secret", "enabled": true },
-    { "key": "admin_token", "value": "", "type": "secret", "enabled": true },
-    { "key": "challenge_token", "value": "", "type": "secret", "enabled": true },
-    { "key": "zomato_user_key", "value": "", "type": "secret", "enabled": true }
-  ],
-  "_postman_variable_scope": "environment"
+    "id": "754accc9-d9a7-48e0-83a7-dbf2f597c397",
+    "name": "Development",
+    "values": [
+        { "key": "base_url", "value": "http://localhost:8000", "type": "default", "enabled": true },
+        {
+            "key": "telegram_webhook_url",
+            "value": "https://laravel.catatkeu.app/api/telegram/webhook",
+            "type": "default",
+            "enabled": true
+        },
+        { "key": "telegram_webhook_secret", "value": "", "type": "secret", "enabled": true },
+        { "key": "test_email", "value": "newbie@example.test", "type": "default", "enabled": true },
+        { "key": "test_password", "value": "Password123", "type": "secret", "enabled": true },
+        { "key": "admin_email", "value": "admin@example.test", "type": "default", "enabled": true },
+        { "key": "admin_password", "value": "password", "type": "secret", "enabled": true },
+        { "key": "user_token", "value": "", "type": "secret", "enabled": true },
+        { "key": "admin_token", "value": "", "type": "secret", "enabled": true },
+        { "key": "challenge_token", "value": "", "type": "secret", "enabled": true },
+        { "key": "zomato_user_key", "value": "", "type": "secret", "enabled": true }
+    ],
+    "_postman_variable_scope": "environment"
 }

@@ -33,11 +33,6 @@
         }
     },
     "files": {
-        "ignore": [
-            "vendor/**",
-            "node_modules/**",
-            "public/build/**",
-            "storage/**"
-        ]
+        "ignore": ["vendor/**", "node_modules/**", "public/build/**", "storage/**"]
     }
 }

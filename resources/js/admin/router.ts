@@ -1,9 +1,9 @@
 import { createRouter } from "@tanstack/react-router";
 import { Route as rootRoute } from "./routes/__root";
+import { Route as enroll2faRoute } from "./routes/enroll-2fa";
 import { Route as homeRoute } from "./routes/home";
 import { Route as loginRoute } from "./routes/login";
 import { Route as logsRoute } from "./routes/logs";
-import { Route as enroll2faRoute } from "./routes/enroll-2fa";
 import { Route as verify2faRoute } from "./routes/verify-2fa";
 
 // Build the route tree manually (no codegen).

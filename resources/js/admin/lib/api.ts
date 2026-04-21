@@ -32,7 +32,7 @@ function subscribeTokenRefresh(cb: (token: string | null) => void) {
 }
 
 function onRefreshResolved(token: string | null) {
-    refreshSubscribers.forEach((cb) => cb(token));
+    for (const cb of refreshSubscribers) cb(token);
     refreshSubscribers = [];
 }
 

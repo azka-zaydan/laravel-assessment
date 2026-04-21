@@ -1,67 +1,67 @@
 {
-  "R": {
-    "res_id": 16507621,
-    "is_grocery_store": false,
-    "has_new_ad": 0,
-    "is_brand": 0
-  },
-  "apikey": "test-api-key",
-  "id": "16507621",
-  "name": "Pizzeria Napoli Jakarta",
-  "url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta",
-  "location": {
-    "address": "Jl. Sudirman No. 10, Kebayoran Baru, Jakarta Selatan 12190",
-    "locality": "Kebayoran Baru",
-    "city": "Jakarta",
-    "city_id": 74,
-    "latitude": "-6.2241",
-    "longitude": "106.8131",
-    "zipcode": "12190",
-    "country_id": 94,
-    "locality_verbose": "Kebayoran Baru, Jakarta"
-  },
-  "switch_to_order_menu": 0,
-  "cuisines": "Italian, Pizza",
-  "timings": "11:00 AM - 11:00 PM (Mon-Sun)",
-  "average_cost_for_two": 200000,
-  "price_range": 3,
-  "currency": "Rp",
-  "highlights": ["Table booking", "No alcohol"],
-  "offers": [],
-  "opentable_support": 0,
-  "is_zomato_book_res": 0,
-  "mezzo_provider": "NONE",
-  "is_book_form_web_view": 0,
-  "book_form_web_view_url": "",
-  "book_again_url": "",
-  "thumb": "https://b.zmtcdn.com/data/pictures/1/16507621/thumb.jpg",
-  "user_rating": {
-    "aggregate_rating": "4.3",
-    "rating_text": "Very Good",
-    "rating_color": "5BA829",
-    "rating_obj": {
-      "title": {
-        "text": "4.3"
-      },
-      "bg_color": {
-        "type": "lime",
-        "tint": "600"
-      }
+    "R": {
+        "res_id": 16507621,
+        "is_grocery_store": false,
+        "has_new_ad": 0,
+        "is_brand": 0
     },
-    "votes": 842
-  },
-  "all_reviews_count": 842,
-  "photos_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/photos",
-  "photo_count": 124,
-  "menu_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/menu",
-  "featured_image": "https://b.zmtcdn.com/data/pictures/1/16507621/featured.jpg",
-  "has_online_delivery": 1,
-  "is_delivering_now": 1,
-  "include_bogo_offers": true,
-  "deeplink": "zomato://restaurant/16507621",
-  "is_table_reservation_supported": 1,
-  "has_new_ad": 0,
-  "events_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/events",
-  "establishment_types": [],
-  "phone_numbers": "+62 21 5550 1001"
+    "apikey": "test-api-key",
+    "id": "16507621",
+    "name": "Pizzeria Napoli Jakarta",
+    "url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta",
+    "location": {
+        "address": "Jl. Sudirman No. 10, Kebayoran Baru, Jakarta Selatan 12190",
+        "locality": "Kebayoran Baru",
+        "city": "Jakarta",
+        "city_id": 74,
+        "latitude": "-6.2241",
+        "longitude": "106.8131",
+        "zipcode": "12190",
+        "country_id": 94,
+        "locality_verbose": "Kebayoran Baru, Jakarta"
+    },
+    "switch_to_order_menu": 0,
+    "cuisines": "Italian, Pizza",
+    "timings": "11:00 AM - 11:00 PM (Mon-Sun)",
+    "average_cost_for_two": 200000,
+    "price_range": 3,
+    "currency": "Rp",
+    "highlights": ["Table booking", "No alcohol"],
+    "offers": [],
+    "opentable_support": 0,
+    "is_zomato_book_res": 0,
+    "mezzo_provider": "NONE",
+    "is_book_form_web_view": 0,
+    "book_form_web_view_url": "",
+    "book_again_url": "",
+    "thumb": "https://b.zmtcdn.com/data/pictures/1/16507621/thumb.jpg",
+    "user_rating": {
+        "aggregate_rating": "4.3",
+        "rating_text": "Very Good",
+        "rating_color": "5BA829",
+        "rating_obj": {
+            "title": {
+                "text": "4.3"
+            },
+            "bg_color": {
+                "type": "lime",
+                "tint": "600"
+            }
+        },
+        "votes": 842
+    },
+    "all_reviews_count": 842,
+    "photos_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/photos",
+    "photo_count": 124,
+    "menu_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/menu",
+    "featured_image": "https://b.zmtcdn.com/data/pictures/1/16507621/featured.jpg",
+    "has_online_delivery": 1,
+    "is_delivering_now": 1,
+    "include_bogo_offers": true,
+    "deeplink": "zomato://restaurant/16507621",
+    "is_table_reservation_supported": 1,
+    "has_new_ad": 0,
+    "events_url": "https://www.zomato.com/jakarta/pizzeria-napoli-jakarta/events",
+    "establishment_types": [],
+    "phone_numbers": "+62 21 5550 1001"
 }

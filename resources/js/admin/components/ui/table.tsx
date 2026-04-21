@@ -1,5 +1,10 @@
-import { type HTMLAttributes, type TdHTMLAttributes, type ThHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import {
+    type HTMLAttributes,
+    type TdHTMLAttributes,
+    type ThHTMLAttributes,
+    forwardRef,
+} from "react";
 
 const Table = forwardRef<HTMLTableElement, HTMLAttributes<HTMLTableElement>>(
     ({ className, ...props }, ref) => (
@@ -92,13 +97,4 @@ const TableCaption = forwardRef<HTMLTableCaptionElement, HTMLAttributes<HTMLTabl
 );
 TableCaption.displayName = "TableCaption";
 
-export {
-    Table,
-    TableHeader,
-    TableBody,
-    TableFooter,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableCaption,
-};
+export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };

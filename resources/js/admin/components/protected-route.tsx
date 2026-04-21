@@ -1,6 +1,6 @@
+import { useAuth } from "@/lib/auth";
 import { Navigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useAuth } from "@/lib/auth";
 
 interface ProtectedRouteProps {
     children: ReactNode;

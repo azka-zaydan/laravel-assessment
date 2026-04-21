@@ -1,52 +1,52 @@
 {
-  "cuisines": [
-    {
-      "cuisine": {
-        "cuisine_id": 1,
-        "cuisine_name": "Indonesian"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 55,
-        "cuisine_name": "Italian"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 82,
-        "cuisine_name": "Pizza"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 3,
-        "cuisine_name": "Chinese"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 38,
-        "cuisine_name": "Japanese"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 6,
-        "cuisine_name": "Fast Food"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 100,
-        "cuisine_name": "Pasta"
-      }
-    },
-    {
-      "cuisine": {
-        "cuisine_id": 148,
-        "cuisine_name": "Desserts"
-      }
-    }
-  ]
+    "cuisines": [
+        {
+            "cuisine": {
+                "cuisine_id": 1,
+                "cuisine_name": "Indonesian"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 55,
+                "cuisine_name": "Italian"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 82,
+                "cuisine_name": "Pizza"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 3,
+                "cuisine_name": "Chinese"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 38,
+                "cuisine_name": "Japanese"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 6,
+                "cuisine_name": "Fast Food"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 100,
+                "cuisine_name": "Pasta"
+            }
+        },
+        {
+            "cuisine": {
+                "cuisine_id": 148,
+                "cuisine_name": "Desserts"
+            }
+        }
+    ]
 }

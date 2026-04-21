@@ -1,15 +1,16 @@
-import { createRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { Route as rootRoute } from "./__root";
 import { ProtectedRoute } from "@/components/protected-route";
-import api from "@/lib/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -18,6 +19,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import api from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { createRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Route as rootRoute } from "./__root";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,7 +155,11 @@ function LogsPage() {
     });
 
     function setFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
-        setFilters((prev) => ({ ...prev, [key]: value, page: key === "page" ? (value as number) : 1 }));
+        setFilters((prev) => ({
+            ...prev,
+            [key]: value,
+            page: key === "page" ? (value as number) : 1,
+        }));
     }
 
     function handleReset() {
@@ -262,9 +272,7 @@ function LogsPage() {
                 {isError && (
                     <Alert variant="destructive">
                         <AlertDescription>
-                            {error instanceof Error
-                                ? error.message
-                                : "Failed to load API logs."}
+                            {error instanceof Error ? error.message : "Failed to load API logs."}
                         </AlertDescription>
                     </Alert>
                 )}

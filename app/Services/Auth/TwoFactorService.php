@@ -104,22 +104,18 @@ class TwoFactorService
 
     /**
      * Verify either a TOTP code or a recovery code.
-     * Returns 'totp', 'recovery', or null.
      *
      * @param  list<string>  $hashedRecoveryCodes
-     * @return array{method: 'totp'|'recovery', remaining_codes?: list<string>}|null
      */
-    public function verify(User $user, string $code, array $hashedRecoveryCodes): ?array
+    public function verify(User $user, string $code, array $hashedRecoveryCodes): ?VerifyResult
     {
-        // Try TOTP first
         if ($user->two_factor_secret !== null && $this->verifyTotp((string) $user->two_factor_secret, $code)) {
-            return ['method' => 'totp'];
+            return new TotpVerified;
         }
 
-        // Fall back to recovery code
         $remaining = $this->consumeRecoveryCode($code, $hashedRecoveryCodes);
         if ($remaining !== null) {
-            return ['method' => 'recovery', 'remaining_codes' => $remaining];
+            return new RecoveryVerified($remaining);
         }
 
         return null;

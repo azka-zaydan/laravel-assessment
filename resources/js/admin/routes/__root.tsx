@@ -1,8 +1,8 @@
+import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { Link, Outlet, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { LogOut, QrCode, ScrollText } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import api from "@/lib/api";
-import { Button } from "@/components/ui/button";
 
 function RootLayout() {
     const { accessToken, logout } = useAuth();

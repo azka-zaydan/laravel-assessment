@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect, createElement, type ReactNode } from "react";
+import {
+    type ReactNode,
+    createContext,
+    createElement,
+    useContext,
+    useEffect,
+    useState,
+} from "react";
 import { registerAccessTokenSetter } from "./authRef";
 
 // ---------------------------------------------------------------------------
@@ -40,12 +47,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAccessToken(null);
     };
 
-    // Register setter so api.ts can update the token after refresh.
+    // Register setter so api.ts can update the token after refresh. The setter
+    // is stable (not wrapped in useCallback), so empty deps is intentional.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: setter is module-stable
     useEffect(() => {
         registerAccessTokenSetter(setAccessToken);
     }, []);
 
     // Listen for logout event dispatched by api.ts on refresh failure.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: logout is stable within the provider lifecycle
     useEffect(() => {
         const handler = () => logout();
         window.addEventListener("auth:logout", handler);

@@ -9,6 +9,8 @@ use App\Services\Restaurants\RestaurantProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
+use Throwable;
 
 class RestaurantRepository
 {
@@ -89,16 +91,8 @@ class RestaurantRepository
 
         $result = $this->provider->search($criteria);
 
-        // Persist each restaurant to Postgres in the background (best effort)
         foreach ($result['restaurants'] as $r) {
-            try {
-                $this->upsertRestaurant($r);
-            } catch (\Throwable $e) {
-                Log::warning('RestaurantRepository: failed to upsert restaurant', [
-                    'id' => $r['id'] ?? null,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $this->safeUpsertRestaurant($r, 'search');
         }
 
         Cache::put($hash, $result, self::TTL_SEARCH);
@@ -127,11 +121,10 @@ class RestaurantRepository
 
         $result = $this->provider->getReviews($restaurantId, $start, $count);
 
-        // Persist reviews if we have a local restaurant record
         $restaurant = Restaurant::where('zomato_id', $restaurantId)->first();
         if ($restaurant !== null) {
             foreach ($result['reviews'] as $review) {
-                $this->upsertReview($restaurant->id, $review);
+                $this->safeUpsertReview($restaurant->id, $review);
             }
         }
 
@@ -162,14 +155,7 @@ class RestaurantRepository
         $result = $this->provider->getNearby($lat, $lon, $count);
 
         foreach ($result['restaurants'] as $r) {
-            try {
-                $this->upsertRestaurant($r);
-            } catch (\Throwable $e) {
-                Log::warning('RestaurantRepository: failed to upsert nearby restaurant', [
-                    'id' => $r['id'] ?? null,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $this->safeUpsertRestaurant($r, 'nearby');
         }
 
         Cache::put($cacheKey, $result, self::TTL_NEARBY);
@@ -224,6 +210,47 @@ class RestaurantRepository
     // -------------------------------------------------------------------------
 
     /**
+     * Best-effort upsert — never raises to the caller. Each list endpoint
+     * (search/nearby) uses this so a single bad row can't fail the whole page.
+     *
+     * @param  array<string,mixed>  $data
+     */
+    private function safeUpsertRestaurant(array $data, string $source): void
+    {
+        try {
+            $this->upsertRestaurant($data);
+        } catch (InvalidArgumentException) {
+            // Missing zomato id — not actionable; drop silently.
+        } catch (Throwable $e) {
+            Log::error('restaurant.upsert.failed', [
+                'source' => $source,
+                'zomato_id' => $data['id'] ?? null,
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+            ]);
+        }
+    }
+
+    /**
+     * Best-effort review upsert — mirror of safeUpsertRestaurant.
+     *
+     * @param  array<string,mixed>  $reviewData
+     */
+    private function safeUpsertReview(int $restaurantId, array $reviewData): void
+    {
+        try {
+            $this->upsertReview($restaurantId, $reviewData);
+        } catch (Throwable $e) {
+            Log::error('review.upsert.failed', [
+                'restaurant_id' => $restaurantId,
+                'zomato_id' => $reviewData['id'] ?? null,
+                'exception' => $e::class,
+                'code' => $e->getCode(),
+            ]);
+        }
+    }
+
+    /**
      * Upsert a normalized restaurant array into Postgres.
      *
      * @param  array<string,mixed>  $data
@@ -233,7 +260,7 @@ class RestaurantRepository
         $zomatoId = (int) ($data['id'] ?? 0);
 
         if ($zomatoId === 0) {
-            throw new \InvalidArgumentException('Restaurant data missing id field.');
+            throw new InvalidArgumentException('Restaurant data missing id field.');
         }
 
         return DB::transaction(function () use ($data, $zomatoId): Restaurant {

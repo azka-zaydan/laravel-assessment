@@ -1,5 +1,5 @@
 {
-  "code": 404,
-  "status": "Not Found",
-  "message": "Resource Not Found"
+    "code": 404,
+    "status": "Not Found",
+    "message": "Resource Not Found"
 }

@@ -1,13 +1,13 @@
-import { createRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
-import { Route as rootRoute } from "./__root";
-import { useAuth } from "@/lib/auth";
-import api from "@/lib/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import api from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { createRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { type FormEvent, useState } from "react";
+import { Route as rootRoute } from "./__root";
 
 interface Verify2FAResponse {
     access_token: string;
@@ -42,15 +42,10 @@ function Verify2FAPage() {
             setAccessToken(data.access_token);
             void navigate({ to: "/admin/logs" });
         } catch (err: unknown) {
-            if (
-                err &&
-                typeof err === "object" &&
-                "response" in err
-            ) {
+            if (err && typeof err === "object" && "response" in err) {
                 const axiosErr = err as { response?: { data?: { message?: string } } };
                 setError(
-                    axiosErr.response?.data?.message ??
-                        "Invalid or expired code. Please try again."
+                    axiosErr.response?.data?.message ?? "Invalid or expired code. Please try again."
                 );
             } else {
                 setError("An unexpected error occurred. Please try again.");

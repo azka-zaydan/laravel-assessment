@@ -1,6 +1,6 @@
-import { type HTMLAttributes } from "react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { type VariantProps, cva } from "class-variance-authority";
+import type { HTMLAttributes } from "react";
 
 const alertVariants = cva(
     "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
@@ -30,10 +30,7 @@ const Alert = ({
 Alert.displayName = "Alert";
 
 const AlertTitle = ({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
-    <h5
-        className={cn("mb-1 font-medium leading-none tracking-tight", className)}
-        {...props}
-    />
+    <h5 className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
 );
 AlertTitle.displayName = "AlertTitle";
 

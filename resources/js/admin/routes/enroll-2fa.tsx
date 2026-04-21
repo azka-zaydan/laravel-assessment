@@ -1,14 +1,14 @@
-import { createRoute, Link } from "@tanstack/react-router";
-import { type FormEvent, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { Route as rootRoute } from "./__root";
 import { ProtectedRoute } from "@/components/protected-route";
-import api from "@/lib/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import api from "@/lib/api";
+import { Link, createRoute } from "@tanstack/react-router";
+import { QRCodeSVG } from "qrcode.react";
+import { type FormEvent, useState } from "react";
+import { Route as rootRoute } from "./__root";
 
 interface EnableResponse {
     otpauth_url: string;
@@ -44,7 +44,9 @@ function Enroll2FAPage() {
             setStep("qr");
         } catch (err: unknown) {
             if (err && typeof err === "object" && "response" in err) {
-                const axiosErr = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
+                const axiosErr = err as {
+                    response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+                };
                 const data = axiosErr.response?.data;
                 if (data?.errors?.password) {
                     setError(data.errors.password[0]);
@@ -221,9 +223,9 @@ function Enroll2FAPage() {
                             <Alert variant="warning">
                                 <AlertTitle>Save these — shown only once</AlertTitle>
                                 <AlertDescription>
-                                    Store your recovery codes in a safe place. Each code can only
-                                    be used once to sign in if you lose access to your
-                                    authenticator app.
+                                    Store your recovery codes in a safe place. Each code can only be
+                                    used once to sign in if you lose access to your authenticator
+                                    app.
                                 </AlertDescription>
                             </Alert>
                             <pre className="rounded-md bg-muted p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap select-all">

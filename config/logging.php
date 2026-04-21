@@ -1,9 +1,13 @@
 <?php
 
+use App\Logging\TapRedactor;
+use App\Support\Logging\RedactContextProcessor;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
+
+$redactKeys = array_map('trim', explode(',', (string) env('LOG_REDACT_KEYS', 'password,token,secret,authorization,cookie')));
 
 return [
 
@@ -50,7 +54,7 @@ return [
     |
     */
 
-    'redact_keys' => array_map('trim', explode(',', (string) env('LOG_REDACT_KEYS', 'password,token,secret,authorization,cookie'))),
+    'redact_keys' => $redactKeys,
 
     'api_retention_days' => (int) env('API_LOG_RETENTION_DAYS', 30),
 
@@ -69,6 +73,7 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
+            'tap' => [TapRedactor::class],
         ],
 
         'daily' => [
@@ -77,6 +82,7 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
+            'tap' => [TapRedactor::class],
         ],
 
         'slack' => [
@@ -108,7 +114,10 @@ return [
                 'stream' => 'php://stderr',
             ],
             'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [PsrLogMessageProcessor::class],
+            'processors' => [
+                PsrLogMessageProcessor::class,
+                fn () => new RedactContextProcessor($redactKeys),
+            ],
         ],
 
         'syslog' => [
