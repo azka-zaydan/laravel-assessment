@@ -14,7 +14,9 @@ use App\Services\Auth\RefreshTokenService;
 use App\Services\Auth\TwoFactorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class TwoFactorController extends Controller
 {
@@ -29,7 +31,14 @@ class TwoFactorController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        Log::info('2fa.enable.attempt', ['user_id' => $user->id]);
+
         if ($user->two_factor_enabled) {
+            Log::warning('2fa.enable.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'already_enabled',
+            ]);
+
             return response()->json(
                 ['error' => '2FA is already enabled.'],
                 Response::HTTP_FORBIDDEN,
@@ -40,18 +49,34 @@ class TwoFactorController extends Controller
         $password = $request->validated('password');
 
         if (! Hash::check($password, $user->password)) {
+            Log::warning('2fa.enable.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'wrong_password',
+            ]);
+
             return response()->json(
                 ['message' => 'The given data was invalid.', 'errors' => ['password' => ['Wrong password.']]],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         }
 
-        $secret = $this->twoFactorService->generateSecret();
-        $user->two_factor_secret = $secret;
-        $user->save();
+        try {
+            $secret = $this->twoFactorService->generateSecret();
+            $user->two_factor_secret = $secret;
+            $user->save();
+        } catch (Throwable $e) {
+            Log::error('2fa.enable.failed', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         $otpauthUrl = $this->twoFactorService->buildOtpauthUrl($user, $secret);
         $secretMasked = $this->twoFactorService->maskSecret($secret);
+
+        Log::info('2fa.enable.success', ['user_id' => $user->id]);
 
         return response()->json([
             'otpauth_url' => $otpauthUrl,
@@ -64,7 +89,14 @@ class TwoFactorController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        Log::info('2fa.confirm.attempt', ['user_id' => $user->id]);
+
         if ($user->two_factor_secret === null) {
+            Log::warning('2fa.confirm.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'setup_not_initiated',
+            ]);
+
             return response()->json(
                 ['message' => 'The given data was invalid.', 'errors' => ['code' => ['2FA setup not initiated.']]],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
@@ -75,17 +107,37 @@ class TwoFactorController extends Controller
         $code = $request->validated('code');
 
         if (! $this->twoFactorService->verifyTotp((string) $user->two_factor_secret, $code)) {
+            Log::warning('2fa.confirm.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'invalid_totp',
+            ]);
+
             return response()->json(
                 ['message' => 'The given data was invalid.', 'errors' => ['code' => ['Invalid TOTP code.']]],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         }
 
-        $codes = $this->twoFactorService->generateRecoveryCodes();
+        try {
+            $codes = $this->twoFactorService->generateRecoveryCodes();
 
-        $user->two_factor_enabled = true;
-        $user->two_factor_recovery_codes = $codes['hashed'];
-        $user->save();
+            $user->two_factor_enabled = true;
+            $user->two_factor_recovery_codes = $codes['hashed'];
+            $user->save();
+        } catch (Throwable $e) {
+            Log::error('2fa.confirm.failed', [
+                'user_id' => $user->id,
+                'stage' => 'persist',
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        Log::info('2fa.confirm.success', [
+            'user_id' => $user->id,
+            'recovery_code_count' => count($codes['plain']),
+        ]);
 
         return response()->json([
             'recovery_codes' => $codes['plain'],
@@ -100,9 +152,16 @@ class TwoFactorController extends Controller
         /** @var string $code */
         $code = $request->validated('code');
 
+        Log::info('2fa.verify.attempt', ['ip' => $request->ip()]);
+
         $payload = $this->challengeTokenService->verify($challengeToken);
 
         if ($payload === null) {
+            Log::warning('2fa.verify.rejected', [
+                'reason' => 'invalid_challenge_token',
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(
                 ['error' => 'Invalid or expired challenge token.'],
                 Response::HTTP_UNAUTHORIZED,
@@ -112,6 +171,12 @@ class TwoFactorController extends Controller
         $user = User::find($payload['user_id']);
 
         if (! ($user instanceof User)) {
+            Log::warning('2fa.verify.rejected', [
+                'reason' => 'user_not_found',
+                'user_id' => $payload['user_id'],
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(
                 ['error' => 'Invalid or expired challenge token.'],
                 Response::HTTP_UNAUTHORIZED,
@@ -124,6 +189,12 @@ class TwoFactorController extends Controller
         $result = $this->twoFactorService->verify($user, $code, $recoveryCodes);
 
         if ($result === null) {
+            Log::warning('2fa.verify.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'invalid_code',
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(
                 ['error' => 'Invalid code.'],
                 Response::HTTP_UNAUTHORIZED,
@@ -135,7 +206,24 @@ class TwoFactorController extends Controller
         }
 
         $user->two_factor_confirmed_at = now();
-        $user->save();
+
+        try {
+            $user->save();
+        } catch (Throwable $e) {
+            Log::error('2fa.verify.failed', [
+                'user_id' => $user->id,
+                'stage' => 'persist',
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        Log::info('2fa.verify.success', [
+            'user_id' => $user->id,
+            'method' => $result['method'],
+            'ip' => $request->ip(),
+        ]);
 
         $tokenResult = $user->createToken('access_token');
         $accessToken = $tokenResult->accessToken;
@@ -169,20 +257,41 @@ class TwoFactorController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        Log::info('2fa.regenerate.attempt', ['user_id' => $user->id]);
+
         /** @var string $password */
         $password = $request->validated('password');
 
         if (! Hash::check($password, $user->password)) {
+            Log::warning('2fa.regenerate.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'wrong_password',
+            ]);
+
             return response()->json(
                 ['message' => 'The given data was invalid.', 'errors' => ['password' => ['Wrong password.']]],
                 Response::HTTP_UNPROCESSABLE_ENTITY,
             );
         }
 
-        $codes = $this->twoFactorService->generateRecoveryCodes();
+        try {
+            $codes = $this->twoFactorService->generateRecoveryCodes();
 
-        $user->two_factor_recovery_codes = $codes['hashed'];
-        $user->save();
+            $user->two_factor_recovery_codes = $codes['hashed'];
+            $user->save();
+        } catch (Throwable $e) {
+            Log::error('2fa.regenerate.failed', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+
+        Log::info('2fa.regenerate.success', [
+            'user_id' => $user->id,
+            'recovery_code_count' => count($codes['plain']),
+        ]);
 
         return response()->json([
             'recovery_codes' => $codes['plain'],
