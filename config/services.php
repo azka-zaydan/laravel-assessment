@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'zomato' => [
+        'base_url' => env('ZOMATO_BASE_URL', 'https://developers.zomato.com/api/v2.1'),
+        'user_key' => env('ZOMATO_USER_KEY'),
+    ],
+
+    'restaurants' => [
+        'provider' => env('RESTAURANT_PROVIDER', 'mock'),
+    ],
+
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL'),
+        'bot_api_base' => env('TELEGRAM_BOT_API_BASE', 'https://api.telegram.org'),
+    ],
+
 ];

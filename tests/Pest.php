@@ -66,3 +66,44 @@ function verifyCookie(TestResponse $response, string $name): void
 {
     $response->assertCookie($name);
 }
+
+/**
+ * Read the raw contents of a Zomato fixture file.
+ *
+ * Note: Pest 4 ships its own fixture() that returns a path.
+ * This helper returns the file contents instead.
+ *
+ * @throws RuntimeException if the file does not exist
+ */
+function zomatoFixture(string $name): string
+{
+    $path = base_path('tests/Fixtures/zomato/'.$name);
+
+    if (! file_exists($path)) {
+        throw new RuntimeException("Zomato fixture not found: {$path}");
+    }
+
+    return file_get_contents($path);
+}
+
+/**
+ * Create a user with 2FA fully enabled + confirmed within the last 24 hours,
+ * issue a Passport personal access token, and set the Authorization header
+ * on the current test client. Returns the created user.
+ *
+ * Uses a real Passport token + withToken() so that the custom PassportTokenGuard
+ * (which resets $this->user on each setRequest call) resolves the user correctly.
+ */
+function actAsConfirmedUser(): User
+{
+    $user = User::factory()->withTwoFactor()->create();
+
+    // Ensure two_factor_confirmed_at is recent (within the 24-hour TTL window)
+    $user->forceFill(['two_factor_confirmed_at' => now()])->save();
+
+    $token = $user->createToken('test')->accessToken;
+
+    test()->withToken($token);
+
+    return $user;
+}

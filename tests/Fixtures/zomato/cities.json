@@ -1,0 +1,33 @@
+{
+  "location_suggestions": [
+    {
+      "id": 74,
+      "name": "Jakarta",
+      "country_id": 94,
+      "country_name": "Indonesia",
+      "country_flag_url": "https://b.zmtcdn.com/images/countries/flags/country_94.png",
+      "should_experiment_with": 0,
+      "discovery_enabled": 0,
+      "has_new_ad_format": 0,
+      "is_state": 0,
+      "state_id": 0,
+      "state_name": "",
+      "state_code": ""
+    },
+    {
+      "id": 75,
+      "name": "South Jakarta",
+      "country_id": 94,
+      "country_name": "Indonesia",
+      "country_flag_url": "https://b.zmtcdn.com/images/countries/flags/country_94.png",
+      "should_experiment_with": 0,
+      "discovery_enabled": 0,
+      "has_new_ad_format": 0,
+      "is_state": 0,
+      "state_id": 0,
+      "state_name": "",
+      "state_code": ""
+    }
+  ],
+  "status": "success"
+}

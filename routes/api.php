@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\ApiLogController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\TwoFactorController;
 use Illuminate\Support\Facades\Route;
 
@@ -52,4 +53,17 @@ Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])
 */
 Route::middleware(['auth:api', 'require_2fa'])->prefix('admin')->group(function (): void {
     Route::get('/api-logs', [ApiLogController::class, 'index'])->middleware('can:admin');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Restaurant routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:api', 'require_2fa'])->prefix('restaurants')->group(function (): void {
+    Route::get('/', [RestaurantController::class, 'index']);
+    Route::get('/nearby', [RestaurantController::class, 'nearby']);
+    Route::get('/{id}', [RestaurantController::class, 'show'])->whereNumber('id');
+    Route::get('/{id}/reviews', [RestaurantController::class, 'reviews'])->whereNumber('id');
+    Route::get('/{id}/menu', [RestaurantController::class, 'menu'])->whereNumber('id');
 });
