@@ -1,6 +1,6 @@
 {
 	frankenphp {
-		worker /app/public/index.php {$FRANKENPHP_NUM_THREADS:auto}
+		worker /app/public/index.php
 	}
 
 	admin off
