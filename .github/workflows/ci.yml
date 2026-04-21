@@ -1,0 +1,209 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: "8.3"
+  NODE_VERSION: "22"
+
+jobs:
+  lint:
+    name: Pint (code style)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - run: ./vendor/bin/pint --test
+
+  static:
+    name: PHPStan (level 8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - run: ./vendor/bin/phpstan analyse --memory-limit=2G --no-progress --error-format=github
+
+  test-php:
+    name: Pest tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: culinary_bot_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_DATABASE: culinary_bot_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      QUEUE_CONNECTION: sync
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      JWT_CHALLENGE_SECRET: ${{ secrets.JWT_CHALLENGE_SECRET }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+      SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo_pgsql, redis, bcmath, intl, gd, pcov
+          coverage: pcov
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Prepare .env & key
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - run: php artisan migrate --force
+      - name: Passport setup
+        run: |
+          php artisan passport:keys --force
+          php artisan passport:client --personal --name="CI Personal Client" --no-interaction
+      - name: Run Pest
+        run: >-
+          ./vendor/bin/pest --min=70 --coverage-text
+          --coverage-path=app/Services,app/Http/Controllers
+
+  test-frontend:
+    name: Frontend (TS + Biome + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+
+  postman:
+    name: Newman (Postman collection)
+    if: hashFiles('Postman/collection.json') != ''
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: culinary_bot_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+    env:
+      APP_ENV: local
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_DATABASE: culinary_bot_test
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      JWT_CHALLENGE_SECRET: ${{ secrets.JWT_CHALLENGE_SECRET }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+      SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo_pgsql, redis, bcmath, intl, gd
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Prepare app
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan migrate --force
+          php artisan passport:keys --force
+          php artisan passport:client --personal --name="Newman Client" --no-interaction
+      - name: Boot Laravel in background
+        run: php artisan serve --host=0.0.0.0 --port=8000 &
+      - name: Wait for app
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8000/up && break
+            sleep 2
+          done
+      - name: Run Newman
+        run: >-
+          npx -p newman newman run Postman/collection.json
+          -e Postman/environment.json
+          --reporters cli
+          --env-var base_url=http://localhost:8000
+
+  deploy-notify:
+    name: Deploy notify
+    needs: [lint, static, test-php, test-frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI passed. Railway will auto-deploy via GitHub integration."
