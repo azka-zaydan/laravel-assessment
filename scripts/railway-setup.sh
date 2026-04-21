@@ -27,42 +27,53 @@ set +a
 
 echo "Seeding Railway variables for the current service..."
 
-railway variables \
-    --set "APP_NAME=${APP_NAME:-Culinary Bot API}" \
-    --set "APP_ENV=production" \
-    --set "APP_DEBUG=false" \
-    --set "APP_URL=https://laravel.catatkeu.app" \
-    --set "APP_KEY=${APP_KEY}" \
-    --set "LOG_CHANNEL=stack" \
-    --set "LOG_STACK=single" \
-    --set "LOG_LEVEL=info" \
-    --set "DB_CONNECTION=pgsql" \
-    --set "DB_HOST=\${{ Postgres.PGHOST }}" \
-    --set "DB_PORT=\${{ Postgres.PGPORT }}" \
-    --set "DB_DATABASE=\${{ Postgres.PGDATABASE }}" \
-    --set "DB_USERNAME=\${{ Postgres.PGUSER }}" \
-    --set "DB_PASSWORD=\${{ Postgres.PGPASSWORD }}" \
-    --set "SESSION_DRIVER=database" \
-    --set "QUEUE_CONNECTION=redis" \
-    --set "CACHE_STORE=redis" \
-    --set "REDIS_CLIENT=phpredis" \
-    --set "REDIS_HOST=\${{ Redis.REDISHOST }}" \
-    --set "REDIS_PORT=\${{ Redis.REDISPORT }}" \
-    --set "REDIS_PASSWORD=\${{ Redis.REDISPASSWORD }}" \
-    --set "MAIL_MAILER=log" \
-    --set "RESTAURANT_PROVIDER=${RESTAURANT_PROVIDER:-mock}" \
-    --set "ZOMATO_BASE_URL=${ZOMATO_BASE_URL:-https://developers.zomato.com/api/v2.1}" \
-    --set "ZOMATO_USER_KEY=${ZOMATO_USER_KEY:-}" \
-    --set "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" \
-    --set "TELEGRAM_WEBHOOK_SECRET=${TELEGRAM_WEBHOOK_SECRET}" \
-    --set "TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}" \
-    --set "TELEGRAM_BOT_API_BASE=${TELEGRAM_BOT_API_BASE:-https://api.telegram.org}" \
-    --set "JWT_CHALLENGE_SECRET=${JWT_CHALLENGE_SECRET}" \
-    --set "JWT_CHALLENGE_TTL_MINUTES=${JWT_CHALLENGE_TTL_MINUTES:-5}" \
-    --set "SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@example.test}" \
-    --set "SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-password}" \
-    --set "LOG_REDACT_KEYS=${LOG_REDACT_KEYS}" \
-    --set "API_LOG_RETENTION_DAYS=${API_LOG_RETENTION_DAYS:-30}"
+# Build --set arguments conditionally (skip empty values, which Railway rejects).
+args=()
+add_var() {
+    local key=$1
+    local value=$2
+    if [[ -n "$value" ]]; then
+        args+=(--set "${key}=${value}")
+    fi
+}
+
+add_var APP_NAME "${APP_NAME:-Culinary Bot API}"
+add_var APP_ENV production
+add_var APP_DEBUG false
+add_var APP_URL "https://laravel.catatkeu.app"
+add_var APP_KEY "${APP_KEY}"
+add_var LOG_CHANNEL stack
+add_var LOG_STACK single
+add_var LOG_LEVEL info
+add_var DB_CONNECTION pgsql
+add_var DB_HOST "\${{ Postgres.PGHOST }}"
+add_var DB_PORT "\${{ Postgres.PGPORT }}"
+add_var DB_DATABASE "\${{ Postgres.PGDATABASE }}"
+add_var DB_USERNAME "\${{ Postgres.PGUSER }}"
+add_var DB_PASSWORD "\${{ Postgres.PGPASSWORD }}"
+add_var SESSION_DRIVER database
+add_var QUEUE_CONNECTION redis
+add_var CACHE_STORE redis
+add_var REDIS_CLIENT phpredis
+add_var REDIS_HOST "\${{ Redis.REDISHOST }}"
+add_var REDIS_PORT "\${{ Redis.REDISPORT }}"
+add_var REDIS_PASSWORD "\${{ Redis.REDISPASSWORD }}"
+add_var MAIL_MAILER log
+add_var RESTAURANT_PROVIDER "${RESTAURANT_PROVIDER:-mock}"
+add_var ZOMATO_BASE_URL "${ZOMATO_BASE_URL:-https://developers.zomato.com/api/v2.1}"
+add_var ZOMATO_USER_KEY "${ZOMATO_USER_KEY}"
+add_var TELEGRAM_BOT_TOKEN "${TELEGRAM_BOT_TOKEN}"
+add_var TELEGRAM_WEBHOOK_SECRET "${TELEGRAM_WEBHOOK_SECRET}"
+add_var TELEGRAM_WEBHOOK_URL "${TELEGRAM_WEBHOOK_URL}"
+add_var TELEGRAM_BOT_API_BASE "${TELEGRAM_BOT_API_BASE:-https://api.telegram.org}"
+add_var JWT_CHALLENGE_SECRET "${JWT_CHALLENGE_SECRET}"
+add_var JWT_CHALLENGE_TTL_MINUTES "${JWT_CHALLENGE_TTL_MINUTES:-5}"
+add_var SEED_ADMIN_EMAIL "${SEED_ADMIN_EMAIL:-admin@example.test}"
+add_var SEED_ADMIN_PASSWORD "${SEED_ADMIN_PASSWORD:-password}"
+add_var LOG_REDACT_KEYS "${LOG_REDACT_KEYS}"
+add_var API_LOG_RETENTION_DAYS "${API_LOG_RETENTION_DAYS:-30}"
+
+railway variables "${args[@]}"
 
 echo "✅ Railway variables set."
 echo "   Deploy via: git push origin main (Railway native GitHub integration) OR \`railway up\`."
