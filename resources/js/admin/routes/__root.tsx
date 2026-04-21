@@ -1,10 +1,22 @@
-import { Link, Outlet, createRootRoute } from "@tanstack/react-router";
+import { Link, Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
 import { LogOut, QrCode, ScrollText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 function RootLayout() {
     const { accessToken, logout } = useAuth();
+    const navigate = useNavigate();
+
+    async function handleLogout() {
+        try {
+            await api.post("/logout");
+        } catch {
+            // ignore errors — clear auth regardless
+        }
+        logout();
+        void navigate({ to: "/admin/login" });
+    }
 
     return (
         <div className="flex min-h-screen bg-background">
@@ -46,7 +58,8 @@ function RootLayout() {
                             variant="ghost"
                             size="sm"
                             className="w-full justify-start gap-2"
-                            onClick={logout}
+                            onClick={() => void handleLogout()}
+                            type="button"
                         >
                             <LogOut className="h-4 w-4" />
                             Sign out

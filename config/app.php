@@ -132,4 +132,13 @@ return [
     'jwt_challenge_secret' => env('JWT_CHALLENGE_SECRET'),
     'jwt_challenge_ttl_minutes' => (int) env('JWT_CHALLENGE_TTL_MINUTES', 5),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Database Seeder Credentials
+    |--------------------------------------------------------------------------
+    */
+
+    'seed_admin_email' => (string) env('SEED_ADMIN_EMAIL', 'admin@example.com'),
+    'seed_admin_password' => (string) env('SEED_ADMIN_PASSWORD', 'Password1!'),
+
 ];

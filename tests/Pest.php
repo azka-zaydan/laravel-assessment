@@ -2,7 +2,9 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -165,4 +167,63 @@ function actAsConfirmedUser(): User
     test()->withToken($token);
 
     return $user;
+}
+
+/**
+ * Create an admin user with is_admin=true, 2FA confirmed, and a Passport token.
+ * Sets the Authorization header on the current test client. Returns the user.
+ */
+function makeAdmin(): User
+{
+    $user = User::factory()->withTwoFactor()->create([
+        'is_admin' => true,
+    ]);
+
+    $user->forceFill(['two_factor_confirmed_at' => now()])->save();
+
+    $token = $user->createToken('admin-test')->accessToken;
+
+    test()->withToken($token);
+
+    return $user;
+}
+
+/**
+ * Insert an api_logs row directly via DB and return the row id.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function makeApiLog(array $overrides = []): int
+{
+    $defaults = [
+        'request_id' => Str::ulid(),
+        'user_id' => null,
+        'method' => 'GET',
+        'path' => 'api/test',
+        'route_name' => null,
+        'ip' => '127.0.0.1',
+        'user_agent' => 'TestAgent/1.0',
+        'headers' => json_encode([]),
+        'body' => json_encode([]),
+        'response_status' => 200,
+        'response_size_bytes' => 0,
+        'duration_ms' => 10,
+        'created_at' => now()->toDateTimeString(),
+    ];
+
+    $row = array_merge($defaults, $overrides);
+
+    // Encode arrays to JSON if passed as PHP arrays
+    if (is_array($row['headers'])) {
+        $row['headers'] = json_encode($row['headers']);
+    }
+    if (is_array($row['body'])) {
+        $row['body'] = json_encode($row['body']);
+    }
+
+    DB::table('api_logs')->insert($row);
+
+    return (int) DB::table('api_logs')
+        ->where('request_id', $row['request_id'])
+        ->value('id');
 }

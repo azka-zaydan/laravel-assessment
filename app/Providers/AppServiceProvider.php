@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Auth\PassportTokenGuard;
+use App\Models\ApiLog;
 use App\Models\User;
+use App\Observers\ApiLogObserver;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
@@ -30,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ApiLog::observe(ApiLogObserver::class);
+
         Password::defaults(function () {
             return Password::min(8)
                 ->letters()

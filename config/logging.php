@@ -50,6 +50,12 @@ return [
     |
     */
 
+    'redact_keys' => array_map('trim', explode(',', (string) env('LOG_REDACT_KEYS', 'password,token,secret,authorization,cookie'))),
+
+    'api_retention_days' => (int) env('API_LOG_RETENTION_DAYS', 30),
+
+    'header_deny' => ['authorization', 'cookie', 'x-telegram-bot-api-secret-token', 'x-csrf-token', 'x-xsrf-token'],
+
     'channels' => [
 
         'stack' => [

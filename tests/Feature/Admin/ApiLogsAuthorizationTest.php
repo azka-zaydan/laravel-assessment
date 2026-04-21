@@ -69,6 +69,6 @@ it('returns 200 with { data: [] } for admin user with 2FA confirmed', function (
     $this->withToken($accessToken)
         ->getJson('/api/admin/api-logs')
         ->assertStatus(200)
-        ->assertJsonStructure(['data'])
-        ->assertJsonPath('data', []);
+        ->assertJsonStructure(['data', 'links', 'meta'])
+        ->assertJsonIsArray('data');
 });
