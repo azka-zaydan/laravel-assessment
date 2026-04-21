@@ -47,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
             return (bool) $user->is_admin;
         });
 
+        // Allow public access to Scramble's auto-generated API docs.
+        Gate::define('viewApiDocs', fn (?User $user = null): bool => true);
+
         // Override Passport's guard to reset the cached user on each new request.
         // This ensures token revocation is respected within a single test run where
         // multiple simulated HTTP requests share the same application instance.
