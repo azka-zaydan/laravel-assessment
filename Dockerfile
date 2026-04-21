@@ -61,7 +61,7 @@ WORKDIR /app
 
 # ── Application code ──────────────────────────────────────────────────────────
 COPY --from=composer /app/vendor ./vendor
-COPY artisan ./
+COPY artisan composer.json composer.lock ./
 COPY app/ app/
 COPY bootstrap/ bootstrap/
 COPY config/ config/
