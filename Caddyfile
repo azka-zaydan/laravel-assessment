@@ -1,36 +1,27 @@
 {
-    # Use the SERVER_NAME env var so Railway can inject its own hostname/PORT.
-    # Falls back to "localhost" in local Docker dev.
-    {$SERVER_NAME:localhost}
+	frankenphp
 
-    frankenphp
-
-    # Global server options
-    admin off
-    auto_https off
+	admin off
+	auto_https off
 }
 
-{$SERVER_NAME:localhost}:8000 {
-    # Compress responses
-    encode gzip zstd
+:{$PORT:8000} {
+	encode gzip zstd
 
-    root * /app/public
+	root * /app/public
 
-    # Serve static files directly (avoids PHP round-trip for assets)
-    @staticFiles {
-        file
-        not path /index.php
-    }
-    handle @staticFiles {
-        file_server
-    }
+	@staticFiles {
+		file
+		not path /index.php
+	}
+	handle @staticFiles {
+		file_server
+	}
 
-    # Route everything else through Laravel's front controller in worker mode.
-    # num_threads = 2 × number of logical CPUs (auto-detected at startup).
-    php_server {
-        worker {
-            file /app/public/index.php
-            num {$FRANKENPHP_NUM_THREADS:auto}
-        }
-    }
+	php_server {
+		worker {
+			file /app/public/index.php
+			num {$FRANKENPHP_NUM_THREADS:auto}
+		}
+	}
 }

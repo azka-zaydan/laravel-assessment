@@ -83,8 +83,7 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 # ── Environment defaults ──────────────────────────────────────────────────────
 ENV APP_ENV=production \
-    APP_DEBUG=false \
-    SERVER_NAME=":8000"
+    APP_DEBUG=false
 
 EXPOSE 8000
 
