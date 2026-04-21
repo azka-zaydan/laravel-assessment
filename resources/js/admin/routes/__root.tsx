@@ -1,4 +1,4 @@
-import { Link, Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
+import { Link, Outlet, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { LogOut, QrCode, ScrollText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import api from "@/lib/api";
@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 function RootLayout() {
     const { accessToken, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // The public landing page at "/" renders full-width without the admin chrome.
+    if (!location.pathname.startsWith("/admin")) {
+        return <Outlet />;
+    }
 
     async function handleLogout() {
         try {
