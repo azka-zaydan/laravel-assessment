@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Faker\Factory as FakerFactory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Config;
@@ -30,7 +31,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 5 regular users
-        User::factory()->count(5)->create();
+        // 5 regular users via factory (requires fakerphp/faker — skip in production
+        // builds where dev deps are stripped out).
+        if (class_exists(FakerFactory::class)) {
+            User::factory()->count(5)->create();
+        }
     }
 }
