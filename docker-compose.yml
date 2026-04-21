@@ -27,9 +27,55 @@ services:
       timeout: 5s
       retries: 10
 
-  # app / worker / scheduler services are defined once we have a Dockerfile
-  # built on FrankenPHP. For local dev, run `php artisan serve` + `queue:work`
-  # on the host against the db+redis containers above.
+  app:
+    build: .
+    container_name: culinary-bot-app
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      # Bind-mount host source for live-reload in local dev.
+      - .:/app
+      # Named volume keeps the container-built vendor/ from being shadowed
+      # by the host directory (where vendor/ may be absent or differ).
+      - vendor:/app/vendor
+    restart: unless-stopped
+
+  worker:
+    build: .
+    container_name: culinary-bot-worker
+    command: php artisan queue:work redis --tries=3 --timeout=90 --sleep=3
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - vendor:/app/vendor
+    restart: unless-stopped
+
+  scheduler:
+    build: .
+    container_name: culinary-bot-scheduler
+    command: php artisan schedule:work
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - vendor:/app/vendor
+    restart: unless-stopped
 
 volumes:
   pgdata:
+  vendor:

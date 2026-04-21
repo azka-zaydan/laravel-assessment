@@ -1,0 +1,50 @@
+# Version control
+.git/
+.gitattributes
+.gitignore
+
+# Node / frontend build artefacts (not needed in the PHP image)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Composer deps (rebuilt inside the image)
+vendor/
+
+# Environment files — injected at runtime, never baked in
+.env
+.env.*
+!.env.example
+
+# Storage runtime dirs (keep the skeleton dirs, drop runtime data)
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Tests — not needed in production
+tests/
+phpunit.xml
+phpstan.neon
+pest.php
+
+# Documentation
+*.md
+PLAN.md
+README.md
+
+# CI / tooling
+.github/
+.editorconfig
+biome.json
+tsconfig.json
+vite.config.ts
+components.json
+.npmrc
+
+# Docker artefacts themselves (avoid recursive COPY confusion)
+Dockerfile
+docker-compose.yml
+.dockerignore
