@@ -44,10 +44,20 @@ class OsmProvider implements RestaurantProvider
             ->retry(1, 250, throw: false);
     }
 
+    // Jakarta city centre — used for the empty-q browse fallback.
+    private const JAKARTA_LAT = -6.2088;
+
+    private const JAKARTA_LON = 106.8456;
+
     /**
-     * Text search via Nominatim. Query is appended with ", Jakarta" so the
-     * geocoder scopes results to the target city (OSM matches across the
-     * whole planet otherwise).
+     * Text search.
+     *
+     *  - Named query (e.g. "sushi") → Nominatim /search with ", Jakarta"
+     *    appended so the geocoder scopes results to the target city.
+     *  - Empty query (browse-all) → fall back to an Overpass QL query for
+     *    amenity=restaurant nodes around Jakarta centre. Nominatim does
+     *    NOT work as a category-browse engine (it returns zero results
+     *    for generic "restaurant, Jakarta"), but Overpass does.
      *
      * @param  array<string,mixed>  $criteria
      * @return array{results_found:int,start:int,count:int,restaurants:array<int,array<string,mixed>>}
@@ -58,10 +68,23 @@ class OsmProvider implements RestaurantProvider
         $count = max(1, min(20, (int) ($criteria['count'] ?? 10)));
         $start = max(0, (int) ($criteria['start'] ?? 0));
 
-        $query = $q === '' ? "restaurant, {$this->defaultCity}" : "{$q}, {$this->defaultCity}";
+        if ($q === '') {
+            // Browse all: Overpass nearby around Jakarta centre. Wide radius
+            // so the first page feels populated; results get clipped to the
+            // caller's count+start afterwards.
+            $nearby = $this->getNearby(self::JAKARTA_LAT, self::JAKARTA_LON, $count + $start);
+            $paginated = array_slice($nearby['restaurants'], $start, $count);
+
+            return [
+                'results_found' => $nearby['total'],
+                'start' => $start,
+                'count' => count($paginated),
+                'restaurants' => $paginated,
+            ];
+        }
 
         $response = $this->client($this->nominatimBaseUrl)->get('/search', [
-            'q' => $query,
+            'q' => "{$q}, {$this->defaultCity}",
             'format' => 'json',
             'addressdetails' => 1,
             'limit' => $count + $start,
@@ -71,7 +94,7 @@ class OsmProvider implements RestaurantProvider
         if (! $response->successful()) {
             Log::warning('OsmProvider: Nominatim search failed', [
                 'status' => $response->status(),
-                'q' => $query,
+                'q' => $q,
             ]);
 
             return $this->emptySearch($start);

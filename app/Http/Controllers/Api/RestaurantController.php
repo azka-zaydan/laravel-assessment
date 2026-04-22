@@ -92,17 +92,63 @@ class RestaurantController extends Controller
 
         $result = $this->service->getNearby($lat, $lon, $count);
 
-        return response()->json([
-            'data' => array_map(function ($r) use ($request) {
-                $resource = (new RestaurantResource($r))->toArray($request);
-                $resource['distance_meters'] = $r['distance_meters'] ?? null;
+        $data = array_map(function ($r) use ($request, $lat, $lon) {
+            $resource = (new RestaurantResource($r))->toArray($request);
 
-                return $resource;
-            }, $result['restaurants']),
+            // Compute distance here so every provider (Zomato, Foursquare,
+            // OSM, Fixture) gets distance_meters populated uniformly
+            // without each having to implement the Haversine.
+            $resource['distance_meters'] = $this->distanceMeters(
+                $lat,
+                $lon,
+                (float) ($r['location']['lat'] ?? 0),
+                (float) ($r['location']['lon'] ?? 0),
+            );
+
+            return $resource;
+        }, $result['restaurants']);
+
+        // Sort nearest-first. Providers vary in whether upstream sorts —
+        // Foursquare with sort=distance does, FixtureProvider/OSM Overpass
+        // don't — so we normalise client-facing ordering here.
+        // Rows without coordinates (distance_meters === null) sink to the
+        // bottom so they don't pollute the "closest" head of the list.
+        usort($data, static fn (array $a, array $b): int => match (true) {
+            $a['distance_meters'] === null && $b['distance_meters'] === null => 0,
+            $a['distance_meters'] === null => 1,
+            $b['distance_meters'] === null => -1,
+            default => $a['distance_meters'] <=> $b['distance_meters'],
+        });
+
+        return response()->json([
+            'data' => $data,
             'meta' => [
                 'total' => $result['total'],
             ],
         ]);
+    }
+
+    /**
+     * Great-circle distance in whole metres between two WGS84 points.
+     * Accurate enough for "nearest restaurant" UX (error < 0.5% at Jakarta
+     * latitudes) and avoids a PostGIS dependency.
+     */
+    private function distanceMeters(float $lat1, float $lon1, float $lat2, float $lon2): ?int
+    {
+        if ($lat2 === 0.0 && $lon2 === 0.0) {
+            // Missing coords on the result — don't fabricate a "distance to
+            // null island". null communicates "unknown" honestly.
+            return null;
+        }
+
+        $earthRadius = 6_371_000; // metres
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return (int) round($earthRadius * $c);
     }
 
     /**

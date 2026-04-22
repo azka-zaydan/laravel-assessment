@@ -21,9 +21,16 @@ class ApiLogRepository
     {
         return QueryBuilder::for(ApiLog::class)
             ->allowedFilters(
-                'user_id',
+                // Integer / smallint columns: exact match. The default spatie
+                // "simple filter" compiles to `LOWER(col) LIKE LOWER('%v%')`
+                // which blows up on Postgres non-text columns with
+                // `function lower(smallint) does not exist` (and same for
+                // bigint on user_id). Exact comparison is the right semantics
+                // here too — nobody wants partial-match on a status code.
+                AllowedFilter::exact('user_id'),
+                AllowedFilter::exact('response_status'),
+                // Text columns: partial case-insensitive match is fine.
                 'method',
-                'response_status',
                 'path',
                 AllowedFilter::callback('from', fn ($q, $v) => $q->where('created_at', '>=', $v)),
                 AllowedFilter::callback('to', fn ($q, $v) => $q->where('created_at', '<=', $v)),

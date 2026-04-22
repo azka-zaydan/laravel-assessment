@@ -27,6 +27,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // appendToGroup places it last in the api middleware stack.
         $middleware->appendToGroup('api', LogApiRequest::class);
 
+        // Trust the Railway/Cloudflare reverse-proxy chain so Laravel's URL
+        // generator honours X-Forwarded-Proto. Without this, pagination
+        // `meta.links[].url` fields are emitted as `http://` even though
+        // clients reached us over `https://`. Trusting "*" is safe here
+        // because inbound traffic is gated by Cloudflare and Railway edge
+        // before it ever reaches the container.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO
+            | Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
+
         // API-only app: never try to resolve route('login'). The default
         // Authenticate middleware eagerly calls route('login') inside
         // redirectTo() for non-JSON requests — which throws

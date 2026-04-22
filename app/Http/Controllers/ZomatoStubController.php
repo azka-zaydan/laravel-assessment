@@ -130,8 +130,11 @@ class ZomatoStubController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid res_id.'], 400);
         }
 
-        // The /restaurant endpoint returns the node directly, not wrapped.
-        return response()->json($this->toZomatoEnvelope($r)['restaurant']);
+        // Wrap under a "restaurant" key to match the Zomato v2.1 contract —
+        // clients that parse `$body.restaurant.name` would break without it
+        // (our own ZomatoProvider tolerates both shapes, but we should still
+        // be contract-correct for any external consumer following the spec).
+        return response()->json($this->toZomatoEnvelope($r));
     }
 
     /**

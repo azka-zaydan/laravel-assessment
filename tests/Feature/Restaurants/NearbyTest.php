@@ -80,3 +80,27 @@ it('returns 401 when unauthenticated', function () {
     $this->getJson('/api/restaurants/nearby?lat=-6.2088&lon=106.8456')
         ->assertStatus(401);
 });
+
+it('populates a non-null distance_meters for results that have coordinates', function () {
+    // Regression: the controller previously passed through whatever
+    // `distance_meters` the provider returned — which was nothing, so the
+    // field was always null. Now the controller computes Haversine itself.
+    actAsConfirmedUser();
+
+    $response = $this->getJson('/api/restaurants/nearby?lat=-6.2088&lon=106.8456');
+    $response->assertStatus(200);
+
+    $results = collect($response->json('data'));
+    $withCoords = $results->filter(
+        fn (array $r) => ! empty($r['location']['lat']) && ! empty($r['location']['lon'])
+    );
+
+    expect($withCoords)->not->toBeEmpty(); // fixture guarantees coords on every row
+    foreach ($withCoords as $r) {
+        expect($r['distance_meters'])->toBeInt();
+        expect($r['distance_meters'])->toBeGreaterThanOrEqual(0);
+        // All fixture restaurants are within Jakarta — anything over 100km
+        // from Jakarta centre is a clear computation bug.
+        expect($r['distance_meters'])->toBeLessThan(100_000);
+    }
+});
