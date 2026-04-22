@@ -328,7 +328,19 @@ Change `SEED_ADMIN_PASSWORD` before seeding in any non-local environment.
 
 ## Deployment — Railway + Cloudflare
 
-### Railway
+### Three Railway services from one Dockerfile
+
+The same Docker image runs three services, each with a different start command, configured via [Railway config-as-code](https://docs.railway.com/reference/config-as-code) files committed at the repo root:
+
+| Service | Config file | Start command | Runs migrations? |
+|---------|-------------|---------------|------------------|
+| `web` | [`railway.web.json`](railway.web.json) | Dockerfile `ENTRYPOINT` → `frankenphp run ...` | Yes (via `docker/entrypoint.sh`) |
+| `queue-laravel` | [`railway.queue.json`](railway.queue.json) | `php artisan queue:work redis --tries=3 --timeout=90 --sleep=3` | No — `startCommand` replaces ENTRYPOINT |
+| `cron-laravel` | [`railway.cron.json`](railway.cron.json) | `php artisan schedule:work` | No — `startCommand` replaces ENTRYPOINT |
+
+Only `web` runs migrations because only its entrypoint executes. `queue-laravel` and `cron-laravel` set `deploy.startCommand`, which Railway treats as exec-form and **fully replaces `ENTRYPOINT + CMD`** — bypassing `entrypoint.sh` entirely. This avoids the three services racing on `migrate --force` at startup.
+
+### Initial setup
 
 ```bash
 # 1. Authenticate
@@ -337,8 +349,8 @@ railway login
 # 2. Link to your Railway project (or create one on the dashboard)
 railway link
 
-# 3. Set all required environment variables
-railway variables --set \
+# 3. Set required environment variables on the web service
+railway variables --service web --set \
   APP_KEY="$(php artisan key:generate --show)" \
   JWT_CHALLENGE_SECRET="$(openssl rand -hex 64)" \
   TELEGRAM_BOT_TOKEN="<your-bot-token>" \
@@ -352,6 +364,20 @@ railway variables --set \
 4. Add **Postgres** and **Redis** plugins from the Railway dashboard — they inject `DATABASE_URL` and `REDIS_URL` automatically.
 5. Push to `main`. Railway auto-deploys when CI passes via native GitHub integration (no `RAILWAY_TOKEN` secret needed).
 
+### Adding the queue + cron services (one-time, dashboard)
+
+1. In the Railway dashboard, create two services from the same GitHub repo: `queue-laravel` and `cron-laravel`.
+2. For each, open **Settings → Config → Config-as-code Path** and set:
+   - `web` → `/railway.web.json`
+   - `queue-laravel` → `/railway.queue.json`
+   - `cron-laravel` → `/railway.cron.json`
+3. In each new service's **Settings → Deploy → Replica Limits**, set modest caps to control cost:
+   - `queue-laravel` — 0.25 vCPU, 512 MB (Laravel queue worker RSS sits around 80–180 MB)
+   - `cron-laravel` — 0.25 vCPU, 256 MB (mostly idle between minute ticks)
+4. Put shared secrets in **Project Settings → Shared Variables** (`APP_KEY`, `DB_*`, `REDIS_*`, `TELEGRAM_*`, `JWT_CHALLENGE_*`, `PASSPORT_*`), then import into all three services. Keeps env drift out of the picture on secret rotation.
+
+Reference shared values from a service variable using `${{ shared.APP_KEY }}`.
+
 ### Cloudflare
 
 In your Cloudflare dashboard, add a CNAME record on the zone you want to serve the API from:
@@ -361,7 +387,9 @@ In your Cloudflare dashboard, add a CNAME record on the zone you want to serve t
 | Name | `laravel` |
 | Target | Your Railway-provided domain (e.g. `web.up.railway.app`) |
 | Proxy | Enabled (orange cloud) |
-| TLS mode | Full (Strict) |
+| TLS mode | **Full** (not Full (Strict)) |
+
+> Railway's edge certificate is valid for `*.up.railway.app`, not your custom domain. Full (Strict) requires the origin certificate to match the hostname being proxied and will break during edge-certificate rotation. Use plain **Full** — it encrypts Cloudflare ↔ Railway but tolerates Railway's wildcard cert.
 
 After DNS propagates, register the Telegram webhook:
 
