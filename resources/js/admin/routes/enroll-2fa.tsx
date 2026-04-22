@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import api from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import { Link, createRoute } from "@tanstack/react-router";
 import { QRCodeSVG } from "qrcode.react";
 import { type FormEvent, useState } from "react";
@@ -17,6 +18,15 @@ interface EnableResponse {
 
 interface ConfirmResponse {
     recovery_codes: string[];
+}
+
+interface MeResponse {
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        two_factor_enabled: boolean;
+    };
 }
 
 type Step = "password" | "qr" | "done";
@@ -34,14 +44,54 @@ function formatSecret(secret: string): string {
     return secret.replace(/(.{4})/g, "$1 ").trim();
 }
 
+function readApiError(err: unknown, fallback: string): string {
+    if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as {
+            response?: {
+                data?: {
+                    error?: string;
+                    message?: string;
+                    errors?: Record<string, string[]>;
+                };
+            };
+        };
+        const data = axiosErr.response?.data;
+        if (data?.errors) {
+            const first = Object.values(data.errors)[0];
+            if (Array.isArray(first) && first[0]) return first[0];
+        }
+        if (data?.error) return data.error;
+        if (data?.message) return data.message;
+    }
+    return fallback;
+}
+
 function Enroll2FAPage() {
+    const {
+        data: me,
+        isLoading: meLoading,
+        refetch: refetchMe,
+    } = useQuery<MeResponse>({
+        queryKey: ["me"],
+        queryFn: async () => {
+            const res = await api.get<MeResponse>("/me");
+            return res.data;
+        },
+        staleTime: 0,
+    });
+
+    const alreadyEnabled = me?.user.two_factor_enabled === true;
+
     const [step, setStep] = useState<Step>("password");
     const [password, setPassword] = useState("");
+    const [regeneratePassword, setRegeneratePassword] = useState("");
     const [otpauthUrl, setOtpauthUrl] = useState("");
     const [code, setCode] = useState("");
     const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [regenerateError, setRegenerateError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [regenerating, setRegenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [secretCopied, setSecretCopied] = useState(false);
 
@@ -57,19 +107,7 @@ function Enroll2FAPage() {
             setOtpauthUrl(data.otpauth_url);
             setStep("qr");
         } catch (err: unknown) {
-            if (err && typeof err === "object" && "response" in err) {
-                const axiosErr = err as {
-                    response?: { data?: { message?: string; errors?: Record<string, string[]> } };
-                };
-                const data = axiosErr.response?.data;
-                if (data?.errors?.password) {
-                    setError(data.errors.password[0]);
-                } else {
-                    setError(data?.message ?? "Failed to enable 2FA. Please check your password.");
-                }
-            } else {
-                setError("An unexpected error occurred.");
-            }
+            setError(readApiError(err, "Failed to enable 2FA. Please check your password."));
         } finally {
             setLoading(false);
         }
@@ -84,18 +122,31 @@ function Enroll2FAPage() {
             const { data } = await api.post<ConfirmResponse>("/2fa/confirm", { code });
             setRecoveryCodes(data.recovery_codes);
             setStep("done");
+            void refetchMe();
         } catch (err: unknown) {
-            if (err && typeof err === "object" && "response" in err) {
-                const axiosErr = err as { response?: { data?: { message?: string } } };
-                setError(
-                    axiosErr.response?.data?.message ??
-                        "Invalid code. Please check your authenticator app."
-                );
-            } else {
-                setError("An unexpected error occurred.");
-            }
+            setError(readApiError(err, "Invalid code. Please check your authenticator app."));
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleRegenerateSubmit(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setRegenerateError(null);
+        setRegenerating(true);
+
+        try {
+            const { data } = await api.post<ConfirmResponse>("/2fa/recovery-codes/regenerate", {
+                password: regeneratePassword,
+            });
+            setRecoveryCodes(data.recovery_codes);
+            setRegeneratePassword("");
+        } catch (err: unknown) {
+            setRegenerateError(
+                readApiError(err, "Failed to regenerate codes. Please check your password.")
+            );
+        } finally {
+            setRegenerating(false);
         }
     }
 
@@ -122,10 +173,88 @@ function Enroll2FAPage() {
     return (
         <ProtectedRoute>
             <div className="space-y-6 max-w-lg">
-                <h1 className="text-2xl font-semibold">Two-Factor Authentication — Enroll</h1>
+                <h1 className="text-2xl font-semibold">
+                    Two-Factor Authentication
+                    {alreadyEnabled ? " — Settings" : " — Enroll"}
+                </h1>
 
-                {/* Step 1: Password confirmation */}
-                {step === "password" && (
+                {meLoading && (
+                    <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                            Loading…
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Already enabled — show management screen (regenerate recovery codes) */}
+                {!meLoading && alreadyEnabled && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>2FA is active</CardTitle>
+                            <CardDescription>
+                                Your account is protected by an authenticator app. To disable 2FA,
+                                contact an administrator. You can regenerate your recovery codes
+                                below.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {recoveryCodes.length > 0 && (
+                                <>
+                                    <Alert variant="warning">
+                                        <AlertTitle>Save these — shown only once</AlertTitle>
+                                        <AlertDescription>
+                                            Your previous recovery codes are no longer valid. Store
+                                            these in a safe place.
+                                        </AlertDescription>
+                                    </Alert>
+                                    <pre className="rounded-md bg-muted p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap select-all">
+                                        {recoveryCodes.join("\n")}
+                                    </pre>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={handleCopyAll}
+                                        type="button"
+                                    >
+                                        {copied ? "Copied!" : "Copy all"}
+                                    </Button>
+                                </>
+                            )}
+
+                            <form onSubmit={handleRegenerateSubmit} className="space-y-4">
+                                {regenerateError && (
+                                    <Alert variant="destructive">
+                                        <AlertDescription>{regenerateError}</AlertDescription>
+                                    </Alert>
+                                )}
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="regen-password">
+                                        Confirm password to regenerate codes
+                                    </Label>
+                                    <Input
+                                        id="regen-password"
+                                        type="password"
+                                        autoComplete="current-password"
+                                        value={regeneratePassword}
+                                        onChange={(e) => setRegeneratePassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    variant="secondary"
+                                    className="w-full"
+                                    disabled={regenerating || regeneratePassword.length === 0}
+                                >
+                                    {regenerating ? "Regenerating…" : "Regenerate recovery codes"}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Step 1: Password confirmation (only when not already enabled) */}
+                {!meLoading && !alreadyEnabled && step === "password" && (
                     <Card>
                         <CardHeader>
                             <CardTitle>Confirm Your Password</CardTitle>
@@ -160,7 +289,7 @@ function Enroll2FAPage() {
                 )}
 
                 {/* Step 2: QR code + code confirmation */}
-                {step === "qr" && (
+                {!meLoading && !alreadyEnabled && step === "qr" && (
                     <>
                         <Card>
                             <CardHeader>
@@ -244,8 +373,8 @@ function Enroll2FAPage() {
                     </>
                 )}
 
-                {/* Step 3: Recovery codes */}
-                {step === "done" && (
+                {/* Step 3: Recovery codes after fresh enrollment */}
+                {!meLoading && !alreadyEnabled && step === "done" && (
                     <Card>
                         <CardHeader>
                             <CardTitle>2FA Enabled</CardTitle>

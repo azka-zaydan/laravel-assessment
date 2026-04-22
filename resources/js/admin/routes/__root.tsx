@@ -1,13 +1,29 @@
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet, createRootRoute, useLocation, useNavigate } from "@tanstack/react-router";
 import { LogOut, QrCode, ScrollText } from "lucide-react";
+
+interface MeResponse {
+    user: { two_factor_enabled: boolean };
+}
 
 function RootLayout() {
     const { accessToken, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const { data: me } = useQuery<MeResponse>({
+        queryKey: ["me"],
+        queryFn: async () => {
+            const res = await api.get<MeResponse>("/me");
+            return res.data;
+        },
+        enabled: !!accessToken,
+        staleTime: 60_000,
+    });
+    const twoFactorLabel = me?.user.two_factor_enabled ? "2FA Settings" : "2FA Enroll";
 
     // The public landing page at "/" renders full-width without the admin chrome.
     if (!location.pathname.startsWith("/admin")) {
@@ -46,7 +62,7 @@ function RootLayout() {
                                 className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors [&.active]:bg-accent [&.active]:font-medium"
                             >
                                 <QrCode className="h-4 w-4" />
-                                2FA Enroll
+                                {twoFactorLabel}
                             </Link>
                         </>
                     ) : (
