@@ -42,9 +42,30 @@ return [
         'user_key' => env('ZOMATO_USER_KEY', 'stub'),
     ],
 
+    'foursquare' => [
+        // Foursquare Places 2025 endpoint. The key is the Service Key from
+        // the Foursquare developer console — no OAuth flow, just paste.
+        'base_url' => env('FOURSQUARE_BASE_URL', 'https://places-api.foursquare.com'),
+        'api_key' => env('FOURSQUARE_API_KEY', ''),
+        // Pin the API version so server-side response shape changes don't
+        // silently break parsing — see the Foursquare "Versioning" guide.
+        'api_version' => env('FOURSQUARE_API_VERSION', '2025-06-17'),
+    ],
+
+    'osm' => [
+        'nominatim_base_url' => env('OSM_NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
+        'overpass_base_url' => env('OSM_OVERPASS_URL', 'https://overpass-api.de/api/interpreter'),
+        // A real User-Agent identifying this deployment is required by
+        // Nominatim's ToS. Don't spoof a browser UA.
+        'user_agent' => env('OSM_USER_AGENT', 'laravel-culinary-bot/1.0 (contact: admin@example.test)'),
+    ],
+
     'restaurants' => [
-        // `zomato` → ZomatoProvider (real HTTP calls).
-        // `fixture` → FixtureProvider (reads JSON directly; used in tests).
+        // Driver selection for the RestaurantProvider Strategy binding.
+        //   zomato      - internal Zomato-shaped HTTP stub (default).
+        //   foursquare  - Foursquare Places API.
+        //   osm         - OpenStreetMap Nominatim + Overpass (no key).
+        //   fixture     - Read JSON from database/fixtures/zomato (tests).
         'provider' => env('RESTAURANT_PROVIDER', 'zomato'),
     ],
 
