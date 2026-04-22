@@ -3,11 +3,16 @@
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
-    // Switch provider to zomato so ZomatoProvider is used
+    // Switch provider to zomato so ZomatoProvider is used. The config keys
+    // for the Zomato upstream are `services.zomato.*` (see config/services.php
+    // and RestaurantServiceProvider). An earlier version of this test set
+    // `services.restaurants.zomato.*` which was the wrong path — the config
+    // was silently ignored and the provider fell back to the in-app stub URL,
+    // causing cURL 7 errors against localhost in CI.
     config([
         'services.restaurants.provider' => 'zomato',
-        'services.restaurants.zomato.key' => 'test-zomato-key',
-        'services.restaurants.zomato.base_url' => 'https://developers.zomato.com/api/v2.1',
+        'services.zomato.user_key' => 'test-zomato-key',
+        'services.zomato.base_url' => 'https://developers.zomato.com/api/v2.1',
     ]);
 });
 
