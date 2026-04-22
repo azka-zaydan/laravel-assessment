@@ -108,9 +108,9 @@ jobs:
           php artisan passport:keys --force
           php artisan passport:client --personal --name="CI Personal Client" --no-interaction
       - name: Run Pest
-        run: >-
-          ./vendor/bin/pest --min=70 --coverage-text
-          --coverage-path=app/Services,app/Http/Controllers
+        # Pest 4 removed --coverage-path. Coverage is driven from phpunit.xml's
+        # <report> block; --coverage-text just emits the summary inline.
+        run: ./vendor/bin/pest --min=70 --coverage-text
 
   test-frontend:
     name: Frontend (TS + Biome + build)
@@ -184,6 +184,11 @@ jobs:
           cp .env.example .env
           php artisan key:generate
           php artisan migrate --force
+          # Newman's "Auth - Login (admin)" step needs the seeded admin user
+          # (admin@example.test / <SEED_ADMIN_PASSWORD>). Without --seed the
+          # login returns 401 and the whole downstream collection cascades
+          # into auth failures.
+          php artisan db:seed --force
           php artisan passport:keys --force
           php artisan passport:client --personal --name="Newman Client" --no-interaction
       - name: Boot Laravel in background
