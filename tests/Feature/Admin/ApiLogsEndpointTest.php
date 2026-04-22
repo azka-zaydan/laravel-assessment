@@ -29,6 +29,41 @@ it('returns 200 with paginated data for admin with 2FA confirmed', function (): 
         ]);
 });
 
+it('returns 422 (not 500) for a non-numeric filter[response_status]', function (): void {
+    // Regression: the underlying AllowedFilter::exact('response_status') would
+    // pass "abc" to Postgres which rejects it with SQLSTATE[22P02] invalid
+    // input syntax for type smallint — surfacing as a 500. ApiLogIndexRequest
+    // validates the input at the boundary and we should see a clean 422.
+    makeAdmin();
+
+    $this->getJson('/api/admin/api-logs?filter[response_status]=not-a-number')
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('filter.response_status');
+});
+
+it('returns 422 for out-of-range filter[response_status]', function (): void {
+    makeAdmin();
+
+    $this->getJson('/api/admin/api-logs?filter[response_status]=999')
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('filter.response_status');
+});
+
+it('respects X-Forwarded-Proto=https for pagination links (TrustProxies)', function (): void {
+    // Regression: without TrustProxies configured, Laravel's URL generator
+    // emits http:// pagination links even when the request came in over
+    // https://. Cloudflare → Railway prod chain depends on this.
+    makeAdmin();
+
+    $response = $this->withHeaders([
+        'X-Forwarded-Proto' => 'https',
+        'X-Forwarded-Host' => 'laravel.catatkeu.app',
+    ])->getJson('/api/admin/api-logs');
+
+    $response->assertOk();
+    expect($response->json('links.first'))->toStartWith('https://');
+});
+
 it('filters by method=POST and returns only POST logs', function (): void {
     makeAdmin();
 
@@ -108,7 +143,11 @@ it('filters by from date and excludes older entries', function (): void {
         'request_id' => Str::ulid(),
     ]);
 
-    $from = now()->subDays(2)->toIso8601String();
+    // Use toDateTimeString() (Y-m-d H:i:s) rather than toIso8601String()
+    // because the latter emits a `+HH:MM` timezone offset where `+` gets
+    // URL-decoded to a space on the server side, corrupting the date.
+    // Real clients should urlencode() the value or use a space-safe format.
+    $from = urlencode(now()->subDays(2)->toDateTimeString());
     $response = $this->getJson("/api/admin/api-logs?filter[from]={$from}")
         ->assertOk();
 

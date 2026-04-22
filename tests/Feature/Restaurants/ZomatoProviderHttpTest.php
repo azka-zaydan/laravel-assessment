@@ -23,14 +23,9 @@ it('sends user-key and Accept headers when calling /search', function () {
 
     $response = $this->getJson('/api/restaurants?q=pizza');
 
-    // If ZomatoProvider is not yet wired, the endpoint may not exist — skip HTTP assertion
-    if ($response->status() === 404) {
-        Http::assertNothingSent();
-        expect(true)->toBeTrue();
-
-        return;
-    }
-
+    // ZomatoProvider is now a permanent provider (prod deploy flipped to it
+    // multiple times), so the endpoint MUST exist. A 404 here is a real
+    // routing regression, not a "provider not yet wired" case.
     $response->assertStatus(200);
 
     Http::assertSent(function ($request) {
@@ -52,12 +47,6 @@ it('normalized response matches expected shape from zomato fixture', function ()
 
     $response = $this->getJson('/api/restaurants?q=pizza');
 
-    if ($response->status() === 404) {
-        expect(true)->toBeTrue();
-
-        return;
-    }
-
     $response->assertStatus(200)
         ->assertJsonStructure([
             'data' => [
@@ -78,12 +67,6 @@ it('sends user-key header when calling /restaurant endpoint', function () {
     actAsConfirmedUser();
 
     $response = $this->getJson('/api/restaurants/16507621');
-
-    if ($response->status() === 404) {
-        expect(true)->toBeTrue();
-
-        return;
-    }
 
     $response->assertStatus(200);
 

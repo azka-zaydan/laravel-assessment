@@ -72,6 +72,11 @@ class OsmProvider implements RestaurantProvider
             // Browse all: Overpass nearby around Jakarta centre. Wide radius
             // so the first page feels populated; results get clipped to the
             // caller's count+start afterwards.
+            Log::debug('OsmProvider: empty-q fallback, routing through Overpass', [
+                'lat' => self::JAKARTA_LAT,
+                'lon' => self::JAKARTA_LON,
+                'limit' => $count + $start,
+            ]);
             $nearby = $this->getNearby(self::JAKARTA_LAT, self::JAKARTA_LON, $count + $start);
             $paginated = array_slice($nearby['restaurants'], $start, $count);
 
@@ -170,10 +175,14 @@ class OsmProvider implements RestaurantProvider
         ]);
 
         if (! $response->successful()) {
-            Log::warning('OsmProvider: Overpass nearby failed', [
+            // Upstream provider unavailable — log loudly so a user complaint
+            // of "no restaurants anywhere" can be correlated to real
+            // infrastructure failure rather than a legitimately empty area.
+            Log::error('OsmProvider: Overpass nearby failed', [
                 'status' => $response->status(),
                 'lat' => $lat,
                 'lon' => $lon,
+                'context' => 'overpass_unavailable',
             ]);
 
             return ['total' => 0, 'restaurants' => []];

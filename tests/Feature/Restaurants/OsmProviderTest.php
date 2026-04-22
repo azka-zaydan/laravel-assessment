@@ -183,3 +183,42 @@ it('getReviews() returns an empty list (OSM has no reviews)', function () {
 it('getDailyMenu() returns an empty list (OSM has no menus)', function () {
     expect(osmProvider()->getDailyMenu(123))->toBe([]);
 });
+
+it('search() with empty q routes to Overpass, not Nominatim', function () {
+    // Regression: Nominatim returns zero results for generic category
+    // browse like "restaurant, Jakarta". Empty-q must fall back to
+    // Overpass QL so a "browse all" UX isn't silently empty.
+    Http::fake([
+        'overpass.test*' => Http::response([
+            'elements' => [
+                ['id' => 1, 'lat' => -6.2, 'lon' => 106.8, 'tags' => ['name' => 'Warung', 'amenity' => 'restaurant']],
+                ['id' => 2, 'lat' => -6.21, 'lon' => 106.81, 'tags' => ['name' => 'Cafe', 'amenity' => 'restaurant']],
+            ],
+        ], 200),
+        'nominatim.test*' => Http::response([], 200),
+    ]);
+
+    $result = osmProvider()->search(['q' => '', 'count' => 5]);
+
+    expect($result['results_found'])->toBe(2);
+    expect($result['restaurants'])->toHaveCount(2);
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'overpass.test'));
+    Http::assertNotSent(fn ($r) => str_contains($r->url(), 'nominatim.test/search'));
+});
+
+it('search() with empty q paginates Overpass results by start + count', function () {
+    Http::fake([
+        'overpass.test*' => Http::response([
+            'elements' => array_map(
+                fn ($i) => ['id' => $i, 'lat' => -6.2, 'lon' => 106.8, 'tags' => ['name' => "Warung {$i}"]],
+                range(1, 5),
+            ),
+        ], 200),
+    ]);
+
+    $result = osmProvider()->search(['q' => '', 'count' => 2, 'start' => 0]);
+
+    expect($result['results_found'])->toBe(5);
+    expect($result['count'])->toBe(2);
+    expect($result['restaurants'])->toHaveCount(2);
+});

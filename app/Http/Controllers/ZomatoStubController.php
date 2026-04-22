@@ -8,6 +8,7 @@ use App\Models\Review;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Zomato-shaped HTTP endpoint backed by our own Postgres database.
@@ -88,12 +89,21 @@ class ZomatoStubController extends Controller
 
         if ($q !== '') {
             $needle = '%'.mb_strtolower($q).'%';
-            $query->where(function (Builder $inner) use ($needle): void {
+
+            // Postgres stores `cuisines` as JSONB — `::text` cast is required
+            // before LOWER/LIKE. SQLite (used in tests) stores Laravel's
+            // array cast as a JSON string already, so plain LOWER works.
+            // Pick the expression based on the active connection driver so
+            // the stub behaves identically in both environments.
+            $driver = DB::connection()->getDriverName();
+            $cuisineExpr = $driver === 'pgsql'
+                ? 'LOWER(cuisines::text)'
+                : 'LOWER(cuisines)';
+
+            $query->where(function (Builder $inner) use ($needle, $cuisineExpr): void {
                 $inner->whereRaw('LOWER(name) LIKE ?', [$needle])
                     ->orWhereRaw('LOWER(address) LIKE ?', [$needle])
-                    // JSONB array: cuisines::text is the textual representation,
-                    // which contains every element — good enough for a substring hit.
-                    ->orWhereRaw('LOWER(cuisines::text) LIKE ?', [$needle]);
+                    ->orWhereRaw("{$cuisineExpr} LIKE ?", [$needle]);
             });
         }
 

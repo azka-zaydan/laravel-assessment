@@ -128,7 +128,8 @@ jobs:
 
   postman:
     name: Newman (Postman collection)
-    if: hashFiles('Postman/collection.json') != ''
+    # `if: hashFiles(...)` is NOT valid at job level (only inside steps).
+    # Postman/collection.json exists in-repo, so no skip condition is needed.
     runs-on: ubuntu-latest
     services:
       postgres:
