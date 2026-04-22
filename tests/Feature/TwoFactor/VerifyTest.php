@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * Helper: create a 2FA-enabled user, log in, return [user, challengeToken, secret].
@@ -132,4 +133,22 @@ it('returns 401 for a wrong TOTP code with valid challenge_token', function () {
         'challenge_token' => $challengeToken,
         'code' => '000000',
     ])->assertStatus(401);
+});
+
+it('throttles after 6 attempts within 1 minute and returns 429 on the 7th', function () {
+    [$user, $challengeToken] = loginTwoFactorUser();
+
+    RateLimiter::clear('2fa-verify');
+
+    for ($i = 0; $i < 6; $i++) {
+        $this->postJson('/api/2fa/verify', [
+            'challenge_token' => $challengeToken,
+            'code' => '000000',
+        ]);
+    }
+
+    $this->postJson('/api/2fa/verify', [
+        'challenge_token' => $challengeToken,
+        'code' => '000000',
+    ])->assertStatus(429);
 });

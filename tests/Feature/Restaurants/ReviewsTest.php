@@ -66,3 +66,11 @@ it('returns 403 when 2FA enabled but not confirmed', function () {
         ->getJson('/api/restaurants/16507621/reviews')
         ->assertStatus(403);
 });
+
+it('returns 404 for a non-existent restaurant id', function () {
+    actAsConfirmedUser();
+
+    $this->getJson('/api/restaurants/999999/reviews')
+        ->assertStatus(404)
+        ->assertJsonStructure(['error']);
+});

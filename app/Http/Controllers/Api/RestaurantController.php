@@ -59,6 +59,10 @@ class RestaurantController extends Controller
      */
     public function reviews(Request $request, int $id): JsonResponse
     {
+        if ($this->service->getRestaurant($id) === null) {
+            return response()->json(['error' => 'not found'], 404);
+        }
+
         $start = max(0, (int) $request->query('start', 0));
         $count = min(20, max(1, (int) $request->query('count', 5)));
 
@@ -106,6 +110,10 @@ class RestaurantController extends Controller
      */
     public function menu(Request $request, int $id): JsonResponse
     {
+        if ($this->service->getRestaurant($id) === null) {
+            return response()->json(['error' => 'not found'], 404);
+        }
+
         $items = $this->service->getDailyMenu($id);
 
         return response()->json([

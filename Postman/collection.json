@@ -80,41 +80,6 @@
             ]
         },
         {
-            "name": "Auth - Login (admin)",
-            "request": {
-                "method": "POST",
-                "header": [
-                    { "key": "Accept", "value": "application/json" },
-                    { "key": "Content-Type", "value": "application/json" }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\"}"
-                },
-                "url": {
-                    "raw": "{{base_url}}/api/login",
-                    "host": ["{{base_url}}"],
-                    "path": ["api", "login"]
-                }
-            },
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": [
-                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                            "const body = pm.response.json();",
-                            "if (body.access_token) {",
-                            "  pm.environment.set('admin_token', body.access_token);",
-                            "  pm.test('is_admin=true', () => pm.expect(body.user.is_admin).to.be.true);",
-                            "}"
-                        ]
-                    }
-                }
-            ]
-        },
-        {
             "name": "Auth - Me",
             "request": {
                 "method": "GET",
@@ -161,30 +126,6 @@
                             "pm.test('Status 200 or 401', () => pm.expect([200, 401]).to.include(pm.response.code));",
                             "if (pm.response.code === 200) pm.environment.set('user_token', pm.response.json().access_token);"
                         ]
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Auth - Logout",
-            "request": {
-                "method": "POST",
-                "header": [
-                    { "key": "Accept", "value": "application/json" },
-                    { "key": "Authorization", "value": "Bearer {{user_token}}" }
-                ],
-                "url": {
-                    "raw": "{{base_url}}/api/logout",
-                    "host": ["{{base_url}}"],
-                    "path": ["api", "logout"]
-                }
-            },
-            "event": [
-                {
-                    "listen": "test",
-                    "script": {
-                        "type": "text/javascript",
-                        "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
                     }
                 }
             ]
@@ -264,7 +205,8 @@
                     "raw": "{{base_url}}/api/2fa/verify",
                     "host": ["{{base_url}}"],
                     "path": ["api", "2fa", "verify"]
-                }
+                },
+                "description": "challenge_token is only populated when the preceding Login was against a 2FA-enabled user. The canned collection flow uses a fresh non-2FA newbie, so 422 (missing challenge_token) is expected here."
             },
             "event": [
                 {
@@ -272,7 +214,7 @@
                     "script": {
                         "type": "text/javascript",
                         "exec": [
-                            "pm.test('Status 200 or 401', () => pm.expect([200, 401]).to.include(pm.response.code));",
+                            "pm.test('Status 200, 401 or 422', () => pm.expect([200, 401, 422]).to.include(pm.response.code));",
                             "if (pm.response.code === 200) pm.environment.set('user_token', pm.response.json().access_token);"
                         ]
                     }
@@ -302,6 +244,42 @@
                         "type": "text/javascript",
                         "exec": [
                             "pm.test('Status 200/403/422', () => pm.expect([200, 403, 422]).to.include(pm.response.code));"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth - Login (admin)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "Accept", "value": "application/json" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"email\":\"{{admin_email}}\",\"password\":\"{{admin_password}}\"}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/login",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "login"]
+                },
+                "description": "Runs after the newbie 2FA block so the admin's refresh cookie doesn't contaminate the newbie flow's Refresh call."
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "const body = pm.response.json();",
+                            "if (body.access_token) {",
+                            "  pm.environment.set('admin_token', body.access_token);",
+                            "  pm.test('is_admin=true', () => pm.expect(body.user.is_admin).to.be.true);",
+                            "}"
                         ]
                     }
                 }
@@ -462,7 +440,8 @@
                     "raw": "{{base_url}}/api/telegram/link-code",
                     "host": ["{{base_url}}"],
                     "path": ["api", "telegram", "link-code"]
-                }
+                },
+                "description": "Requires the caller to have 2FA fully enrolled + confirmed within 24h. This collection does not complete 2FA enrollment (needs a live TOTP), so the expected outcome here is 403. Set up 2FA manually and re-run for the 200 path."
             },
             "event": [
                 {
@@ -470,10 +449,12 @@
                     "script": {
                         "type": "text/javascript",
                         "exec": [
-                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                            "const body = pm.response.json();",
-                            "pm.test('6-digit code', () => pm.expect(body.code).to.match(/^\\d{6}$/));",
-                            "pm.test('TTL 600', () => pm.expect(body.expires_in).to.equal(600));"
+                            "pm.test('Status 200 or 403', () => pm.expect([200, 403]).to.include(pm.response.code));",
+                            "if (pm.response.code === 200) {",
+                            "  const body = pm.response.json();",
+                            "  pm.test('6-digit code', () => pm.expect(body.code).to.match(/^\\d{6}$/));",
+                            "  pm.test('TTL 600', () => pm.expect(body.expires_in).to.equal(600));",
+                            "}"
                         ]
                     }
                 }
@@ -573,6 +554,31 @@
                         "exec": [
                             "pm.test('Status 200 or 403', () => pm.expect([200, 403]).to.include(pm.response.code));"
                         ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth - Logout",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "Accept", "value": "application/json" },
+                    { "key": "Authorization", "value": "Bearer {{user_token}}" }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/logout",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "logout"]
+                },
+                "description": "Runs last. Revoking the user_token before the 2FA/restaurants/telegram/admin tests would cause cascade 401 failures."
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
                     }
                 }
             ]
