@@ -163,6 +163,17 @@ jobs:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
       SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+      # Use the no-HTTP FixtureProvider in Newman's CI run.
+      # ZomatoProvider would loop back into the same single-threaded
+      # `artisan serve` process (request-within-request deadlock, 20s
+      # timeouts). FixtureProvider reads the JSON fixtures directly
+      # from disk — zero network, zero deadlock — and exercises the
+      # same controller + service + repository + resource layers.
+      RESTAURANT_PROVIDER: fixture
+      # Belt-and-suspenders: also multi-thread the dev server, so any
+      # concurrent HTTP callbacks (e.g. Telegram webhook → getMe) don't
+      # stall either.
+      PHP_CLI_SERVER_WORKERS: "4"
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
