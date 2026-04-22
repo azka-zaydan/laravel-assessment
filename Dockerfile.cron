@@ -1,0 +1,68 @@
+# ============================================================
+# Dockerfile.cron — lean CLI-only image for `php artisan schedule:work`
+#
+# Same base + extensions as Dockerfile.queue. The only real difference:
+# OPcache is disabled for CLI because schedule:work boots a fresh PHP
+# process for every due command — opcache warmup never amortises.
+# Two separate files are cheap; duplication is < 30 lines.
+# ============================================================
+
+FROM composer:2 AS composer
+
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist \
+    --ignore-platform-reqs
+
+COPY artisan ./
+COPY app/ app/
+COPY bootstrap/ bootstrap/
+COPY config/ config/
+COPY database/ database/
+COPY routes/ routes/
+COPY storage/ storage/
+
+RUN composer dump-autoload --optimize --no-dev
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM php:8.3-cli-alpine AS final
+
+ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+
+RUN apk add --no-cache tzdata \
+ && install-php-extensions \
+        pdo_pgsql \
+        redis \
+        bcmath \
+ && rm -rf /var/cache/apk/*
+
+# No opcache.ini — schedule:work forks a new PHP process for every due task,
+# so the opcache would be discarded before the next run. Saves ~2 MB RSS per
+# fork and removes a moving part.
+
+WORKDIR /app
+
+COPY --from=composer /app/vendor ./vendor
+COPY artisan composer.json composer.lock ./
+COPY app/ app/
+COPY bootstrap/ bootstrap/
+COPY config/ config/
+COPY database/ database/
+COPY routes/ routes/
+COPY storage/ storage/
+
+COPY docker/entrypoint.worker.sh /usr/local/bin/entrypoint.worker.sh
+RUN chmod +x /usr/local/bin/entrypoint.worker.sh
+
+RUN chown -R nobody:nobody storage bootstrap/cache
+USER nobody
+
+ENV APP_ENV=production \
+    APP_DEBUG=false
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.worker.sh"]
+CMD ["php", "artisan", "schedule:work"]

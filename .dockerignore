@@ -43,5 +43,7 @@ README.md
 
 # Docker artefacts themselves (avoid recursive COPY confusion)
 Dockerfile
+Dockerfile.queue
+Dockerfile.cron
 docker-compose.yml
 .dockerignore

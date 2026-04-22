@@ -328,17 +328,25 @@ Change `SEED_ADMIN_PASSWORD` before seeding in any non-local environment.
 
 ## Deployment — Railway + Cloudflare
 
-### Three Railway services from one Dockerfile
+### Three Railway services, three Dockerfiles
 
-The same Docker image runs three services, each with a different start command, configured via [Railway config-as-code](https://docs.railway.com/reference/config-as-code) files committed at the repo root:
+Each service has a dedicated Dockerfile optimised for its workload + a matching [Railway config-as-code](https://docs.railway.com/reference/config-as-code) file at the repo root:
 
-| Service | Config file | Start command | Runs migrations? |
-|---------|-------------|---------------|------------------|
-| `web` | [`railway.web.json`](railway.web.json) | Dockerfile `ENTRYPOINT` → `frankenphp run ...` | Yes (via `docker/entrypoint.sh`) |
-| `queue-laravel` | [`railway.queue.json`](railway.queue.json) | `php artisan queue:work redis --tries=3 --timeout=90 --sleep=3` | No — `startCommand` replaces ENTRYPOINT |
-| `cron-laravel` | [`railway.cron.json`](railway.cron.json) | `php artisan schedule:work` | No — `startCommand` replaces ENTRYPOINT |
+| Service | Config file | Dockerfile | Base image | Extensions | ENTRYPOINT + CMD | Approx size |
+|---------|-------------|-----------|-----------|-----------|------------------|------------|
+| `web` | [`railway.web.json`](railway.web.json) | [`Dockerfile`](Dockerfile) | `dunglas/frankenphp:latest-php8.3` | pdo_pgsql, redis, bcmath, intl, gd, opcache | `docker/entrypoint.sh` → `frankenphp run ...` (runs migrations) | ~250 MB |
+| `queue-laravel` | [`railway.queue.json`](railway.queue.json) | [`Dockerfile.queue`](Dockerfile.queue) | `php:8.3-cli-alpine` | pdo_pgsql, redis, bcmath, opcache | `docker/entrypoint.worker.sh` → `php artisan queue:work redis --tries=3 --timeout=90 --sleep=3` | ~45 MB |
+| `cron-laravel` | [`railway.cron.json`](railway.cron.json) | [`Dockerfile.cron`](Dockerfile.cron) | `php:8.3-cli-alpine` | pdo_pgsql, redis, bcmath | `docker/entrypoint.worker.sh` → `php artisan schedule:work` | ~43 MB |
 
-Only `web` runs migrations because only its entrypoint executes. `queue-laravel` and `cron-laravel` set `deploy.startCommand`, which Railway treats as exec-form and **fully replaces `ENTRYPOINT + CMD`** — bypassing `entrypoint.sh` entirely. This avoids the three services racing on `migrate --force` at startup.
+**Why three images instead of one:**
+
+- **5× smaller workers** — dropping FrankenPHP/Caddy/Vite/gd/intl takes compressed image from ~190 MB to ~45 MB. Faster cold starts, faster pulls, smaller surface.
+- **OPcache only where it helps** — enabled on `queue-laravel` (long-lived daemon, bytecode reused across every dequeued job). Disabled on `cron-laravel` (`schedule:work` forks a new PHP process per due task — opcache never amortises).
+- **Migrations run in exactly one place** — `docker/entrypoint.sh` (web) includes `migrate --force`; `docker/entrypoint.worker.sh` (queue + cron) deliberately omits it. No race on `schema_migrations`.
+- **Workers don't need the frontend** — `public/build/*` (Vite output) and the whole Node 22 stage are skipped for queue/cron.
+- **Shared `composer.lock`** — all three stages start `FROM composer:2` with the same lock, so dependency versions are identical across images.
+
+`railway.queue.json` and `railway.cron.json` don't set `deploy.startCommand` — the Dockerfile's `ENTRYPOINT + CMD` owns startup behaviour, including the worker-specific entrypoint that waits for Postgres and caches config but skips migrations.
 
 ### Initial setup
 
