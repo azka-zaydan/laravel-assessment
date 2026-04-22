@@ -211,11 +211,17 @@ jobs:
             sleep 2
           done
       - name: Run Newman
+        # Pass the webhook secret so the "Telegram - Webhook (simulated)"
+        # request sends a valid X-Telegram-Bot-Api-Secret-Token header and
+        # gets a 200 back instead of 403 from ValidateTelegramSecret.
+        env:
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
         run: >-
           npx -p newman newman run Postman/collection.json
           -e Postman/environment.json
           --reporters cli
           --env-var base_url=http://localhost:8000
+          --env-var "telegram_webhook_secret=$TELEGRAM_WEBHOOK_SECRET"
 
   deploy-notify:
     name: Deploy notify

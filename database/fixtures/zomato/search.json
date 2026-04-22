@@ -29,10 +29,7 @@
                 "average_cost_for_two": 200000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "No alcohol"
-                ],
+                "highlights": ["Table booking", "No alcohol"],
                 "offers": [],
                 "opentable_support": 0,
                 "is_zomato_book_res": 0,
@@ -99,10 +96,7 @@
                 "average_cost_for_two": 150000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Delivery",
-                    "Takeaway"
-                ],
+                "highlights": ["Delivery", "Takeaway"],
                 "offers": [],
                 "thumb": "https://b.zmtcdn.com/data/pictures/2/16507622/thumb.jpg",
                 "user_rating": {
@@ -146,11 +140,7 @@
                 "average_cost_for_two": 250000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Wine available",
-                    "Table booking",
-                    "Delivery"
-                ],
+                "highlights": ["Wine available", "Table booking", "Delivery"],
                 "offers": [],
                 "thumb": "https://b.zmtcdn.com/data/pictures/3/16507623/thumb.jpg",
                 "user_rating": {
@@ -194,10 +184,7 @@
                 "average_cost_for_two": 180000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Outdoor seating",
-                    "Delivery"
-                ],
+                "highlights": ["Outdoor seating", "Delivery"],
                 "offers": [],
                 "thumb": "https://b.zmtcdn.com/data/pictures/4/16507624/thumb.jpg",
                 "user_rating": {
@@ -241,11 +228,7 @@
                 "average_cost_for_two": 120000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Halal",
-                    "Delivery",
-                    "Takeaway"
-                ],
+                "highlights": ["Halal", "Delivery", "Takeaway"],
                 "offers": [],
                 "thumb": "https://b.zmtcdn.com/data/pictures/5/16507625/thumb.jpg",
                 "user_rating": {
@@ -288,10 +271,7 @@
                 "average_cost_for_two": 350000,
                 "price_range": 4,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16601001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.5",
@@ -336,10 +316,7 @@
                 "average_cost_for_two": 250000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16601002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.4",
@@ -384,10 +361,7 @@
                 "average_cost_for_two": 200000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16601003/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.2",
@@ -432,10 +406,7 @@
                 "average_cost_for_two": 120000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16602001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.0",
@@ -480,10 +451,7 @@
                 "average_cost_for_two": 180000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16602002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.3",
@@ -528,10 +496,7 @@
                 "average_cost_for_two": 95000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16602003/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.1",
@@ -576,10 +541,7 @@
                 "average_cost_for_two": 75000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16603001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.4",
@@ -624,10 +586,7 @@
                 "average_cost_for_two": 80000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16603002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.6",
@@ -672,10 +631,7 @@
                 "average_cost_for_two": 180000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16604001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.3",
@@ -720,10 +676,7 @@
                 "average_cost_for_two": 60000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16604002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.5",
@@ -768,10 +721,7 @@
                 "average_cost_for_two": 55000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16605001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.2",
@@ -816,10 +766,7 @@
                 "average_cost_for_two": 65000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16605002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.4",
@@ -864,10 +811,7 @@
                 "average_cost_for_two": 70000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16606001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.3",
@@ -912,10 +856,7 @@
                 "average_cost_for_two": 60000,
                 "price_range": 2,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16606002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.1",
@@ -960,10 +901,7 @@
                 "average_cost_for_two": 130000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16607001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.3",
@@ -1008,10 +946,7 @@
                 "average_cost_for_two": 140000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16607002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.5",
@@ -1056,10 +991,7 @@
                 "average_cost_for_two": 160000,
                 "price_range": 3,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16608001/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.4",
@@ -1104,10 +1036,7 @@
                 "average_cost_for_two": 220000,
                 "price_range": 4,
                 "currency": "Rp",
-                "highlights": [
-                    "Table booking",
-                    "Dine-in"
-                ],
+                "highlights": ["Table booking", "Dine-in"],
                 "thumb": "https://b.zmtcdn.com/data/pictures/16608002/thumb.jpg",
                 "user_rating": {
                     "aggregate_rating": "4.5",
