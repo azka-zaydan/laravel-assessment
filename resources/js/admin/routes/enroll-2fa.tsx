@@ -12,7 +12,7 @@ import { Route as rootRoute } from "./__root";
 
 interface EnableResponse {
     otpauth_url: string;
-    secret_masked: string;
+    secret_masked?: string;
 }
 
 interface ConfirmResponse {
@@ -21,16 +21,31 @@ interface ConfirmResponse {
 
 type Step = "password" | "qr" | "done";
 
+function extractSecret(otpauthUrl: string): string {
+    try {
+        const u = new URL(otpauthUrl);
+        return u.searchParams.get("secret") ?? "";
+    } catch {
+        return "";
+    }
+}
+
+function formatSecret(secret: string): string {
+    return secret.replace(/(.{4})/g, "$1 ").trim();
+}
+
 function Enroll2FAPage() {
     const [step, setStep] = useState<Step>("password");
     const [password, setPassword] = useState("");
     const [otpauthUrl, setOtpauthUrl] = useState("");
-    const [secretMasked, setSecretMasked] = useState("");
     const [code, setCode] = useState("");
     const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [secretCopied, setSecretCopied] = useState(false);
+
+    const secret = extractSecret(otpauthUrl);
 
     async function handleEnableSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -40,7 +55,6 @@ function Enroll2FAPage() {
         try {
             const { data } = await api.post<EnableResponse>("/2fa/enable", { password });
             setOtpauthUrl(data.otpauth_url);
-            setSecretMasked(data.secret_masked);
             setStep("qr");
         } catch (err: unknown) {
             if (err && typeof err === "object" && "response" in err) {
@@ -92,6 +106,16 @@ function Enroll2FAPage() {
             setTimeout(() => setCopied(false), 2000);
         } catch {
             // fallback: select text in pre
+        }
+    }
+
+    async function handleCopySecret() {
+        try {
+            await navigator.clipboard.writeText(secret);
+            setSecretCopied(true);
+            setTimeout(() => setSecretCopied(false), 2000);
+        } catch {
+            // clipboard may be unavailable — user can still select text manually
         }
     }
 
@@ -157,9 +181,19 @@ function Enroll2FAPage() {
                                 <p className="text-sm text-muted-foreground text-center">
                                     Can't scan? Enter this code manually:
                                 </p>
-                                <code className="block text-center text-sm font-mono bg-muted rounded px-3 py-2 tracking-widest">
-                                    {secretMasked}
+                                <code className="block text-center text-sm font-mono bg-muted rounded px-3 py-2 tracking-widest select-all break-all">
+                                    {formatSecret(secret)}
                                 </code>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={handleCopySecret}
+                                    type="button"
+                                    disabled={!secret}
+                                >
+                                    {secretCopied ? "Copied!" : "Copy secret"}
+                                </Button>
                             </CardContent>
                         </Card>
 
