@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
     fakeTelegramApi();
 });
 

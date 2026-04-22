@@ -42,5 +42,10 @@ fi
 echo "[entrypoint] Running migrations ..."
 php artisan migrate --force --graceful
 
+echo "[entrypoint] Seeding restaurant fixtures (idempotent, upserts by zomato_id) ..."
+# Non-fatal: a seeder crash should not prevent the web service from booting.
+php artisan db:seed --class=Database\\Seeders\\RestaurantFixtureSeeder --force \
+    || echo "[entrypoint] restaurant seeder failed or skipped — continuing"
+
 # ── Hand off to the container CMD ─────────────────────────────────────────────
 exec "$@"

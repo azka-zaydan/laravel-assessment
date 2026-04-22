@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
 it('returns full restaurant detail for a valid id', function () {

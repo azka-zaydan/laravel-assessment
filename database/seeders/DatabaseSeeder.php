@@ -36,5 +36,9 @@ class DatabaseSeeder extends Seeder
         if (class_exists(FakerFactory::class)) {
             User::factory()->count(5)->create();
         }
+
+        // Restaurant + review + menu data. Idempotent — upserts by zomato_id.
+        // Safe to run on every deploy.
+        $this->call(RestaurantFixtureSeeder::class);
     }
 }

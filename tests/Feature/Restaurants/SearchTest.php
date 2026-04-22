@@ -4,13 +4,14 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
-it('returns 5 normalized restaurants when querying all results', function () {
+it('returns the default page of normalized restaurants when querying all results', function () {
     actAsConfirmedUser();
 
-    // No q param → MockProvider returns all 5 from the search fixture
+    // No q param → FixtureProvider returns the full search fixture capped
+    // at the controller's default page size (20).
     $response = $this->getJson('/api/restaurants');
 
     $response->assertStatus(200)
@@ -21,9 +22,15 @@ it('returns 5 normalized restaurants when querying all results', function () {
             'meta' => ['total', 'start', 'count'],
         ]);
 
-    expect($response->json('data'))->toHaveCount(5);
-    expect($response->json('meta.total'))->toBeInt();
-    expect($response->json('meta.count'))->toBe(5);
+    $fixture = json_decode((string) file_get_contents(
+        base_path('database/fixtures/zomato/search.json')
+    ), true);
+    $expectedTotal = is_array($fixture) ? count($fixture['restaurants'] ?? []) : 0;
+    $expectedPageSize = min($expectedTotal, 20);
+
+    expect($response->json('data'))->toHaveCount($expectedPageSize);
+    expect($response->json('meta.total'))->toBe($expectedTotal);
+    expect($response->json('meta.count'))->toBe($expectedPageSize);
 });
 
 it('returns at least 3 results for pizza keyword (mock filter matches by name)', function () {
@@ -59,7 +66,7 @@ it('returns correct shape for each restaurant item', function () {
 it('returns empty data array when no results found', function () {
     actAsConfirmedUser();
 
-    // Use a unique non-matching string — MockProvider filters by name/address
+    // Use a unique non-matching string — FixtureProvider filters by name/address
     $response = $this->getJson('/api/restaurants?q=xyznonexistentquery99999');
 
     $response->assertStatus(200);

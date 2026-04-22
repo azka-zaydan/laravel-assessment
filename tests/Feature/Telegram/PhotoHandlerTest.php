@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
     fakeTelegramApi();
     Queue::fake();
 });

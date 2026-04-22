@@ -4,7 +4,16 @@ namespace App\Services\Restaurants;
 
 use Illuminate\Support\Facades\Log;
 
-class MockProvider implements RestaurantProvider
+/**
+ * Reads Zomato-shaped responses from on-disk fixtures under
+ * database/fixtures/zomato/*.json. Used by the test suite (Http::fake
+ * would also work but this is simpler for the feature tests that thread
+ * through the whole service+repo layer). Not used in production —
+ * production routes through ZomatoProvider → the in-app HTTP stub at
+ * /zomato/api/v2.1/* (see ZomatoStubController). Both implementations
+ * satisfy the same RestaurantProvider contract.
+ */
+class FixtureProvider implements RestaurantProvider
 {
     /**
      * @var array<string,array<mixed>>
@@ -22,10 +31,10 @@ class MockProvider implements RestaurantProvider
             return $this->fixtureCache[$filename];
         }
 
-        $path = base_path('tests/Fixtures/zomato/'.$filename);
+        $path = base_path('database/fixtures/zomato/'.$filename);
 
         if (! file_exists($path)) {
-            Log::debug("MockProvider: fixture not found [{$filename}] — returning empty array");
+            Log::debug("FixtureProvider: fixture not found [{$filename}] — returning empty array");
 
             return $this->fixtureCache[$filename] = [];
         }
@@ -92,13 +101,28 @@ class MockProvider implements RestaurantProvider
         $start = (int) ($criteria['start'] ?? 0);
         $count = (int) ($criteria['count'] ?? 20);
 
-        // Simple query filter when q is provided
+        // Simple query filter when q is provided. Match name, address, or
+        // any cuisine tag — users search by cuisine at least as often as by
+        // restaurant name ("sushi", "pizza", "burger" are all cuisines).
         if (! empty($criteria['q'])) {
             $q = mb_strtolower((string) $criteria['q']);
             $all = array_values(array_filter(
                 $all,
-                fn ($r) => str_contains(mb_strtolower($r['name']), $q)
-                    || str_contains(mb_strtolower($r['address']), $q)
+                function ($r) use ($q): bool {
+                    if (str_contains(mb_strtolower($r['name']), $q)) {
+                        return true;
+                    }
+                    if (str_contains(mb_strtolower($r['address']), $q)) {
+                        return true;
+                    }
+                    foreach ($r['cuisines'] as $cuisine) {
+                        if (str_contains(mb_strtolower((string) $cuisine), $q)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
             ));
         }
 

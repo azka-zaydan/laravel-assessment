@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     Queue::fake();
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
 it('accepts a valid webhook secret header and dispatches the job', function () {

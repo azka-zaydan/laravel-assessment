@@ -5,7 +5,7 @@ use App\Services\Telegram\MessageDispatcher;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
     fakeTelegramApi();
 });
 

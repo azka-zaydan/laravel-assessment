@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\RestaurantRepository;
-use App\Services\Restaurants\MockProvider;
+use App\Services\Restaurants\FixtureProvider;
 use App\Services\Restaurants\RestaurantProvider;
 use App\Services\Restaurants\RestaurantService;
 use App\Services\Restaurants\ZomatoProvider;
@@ -15,18 +15,22 @@ class RestaurantServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind the concrete provider based on config
+        // Bind the concrete provider based on config. Production uses
+        // `zomato` → ZomatoProvider (real HTTP calls to ZOMATO_BASE_URL,
+        // which points at our in-app /zomato/api/v2.1/* stub). Tests use
+        // `fixture` → FixtureProvider (reads the same JSON files from
+        // database/fixtures/zomato/ directly, no HTTP, no network).
         $this->app->singleton(RestaurantProvider::class, function (Application $app): RestaurantProvider {
-            $driver = config('services.restaurants.provider', 'mock');
+            $driver = config('services.restaurants.provider', 'zomato');
 
-            if ($driver === 'zomato') {
-                return new ZomatoProvider(
-                    baseUrl: (string) config('services.zomato.base_url', 'https://developers.zomato.com/api/v2.1'),
-                    userKey: (string) config('services.zomato.user_key', ''),
-                );
+            if ($driver === 'fixture') {
+                return new FixtureProvider;
             }
 
-            return new MockProvider;
+            return new ZomatoProvider(
+                baseUrl: (string) config('services.zomato.base_url', 'https://laravel.catatkeu.app/zomato/api/v2.1'),
+                userKey: (string) config('services.zomato.user_key', ''),
+            );
         });
 
         // Rate limiter singleton

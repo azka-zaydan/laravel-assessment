@@ -5,7 +5,7 @@ use App\Services\Telegram\MessageDispatcher;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
     fakeTelegramApi();
 });
 
@@ -68,7 +68,7 @@ it('sends sendVenue calls and inline keyboard with menu/rev callback data on /se
         fn ($pair) => str_contains((string) $pair[0]->url(), 'sendVenue')
     );
 
-    // MockProvider search.json with query "pizza" returns restaurants whose name contains "pizza"
+    // FixtureProvider search.json with query "pizza" returns restaurants whose name contains "pizza"
     expect($sendVenueCalls->count())->toBeGreaterThanOrEqual(1);
 
     Http::assertSent(function ($request) {

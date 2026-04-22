@@ -36,12 +36,16 @@ return [
     ],
 
     'zomato' => [
-        'base_url' => env('ZOMATO_BASE_URL', 'https://developers.zomato.com/api/v2.1'),
-        'user_key' => env('ZOMATO_USER_KEY'),
+        // Default points at the in-app stub (same origin). The stub speaks
+        // Zomato v2.1 shape — see routes/web.php + ZomatoStubController.
+        'base_url' => env('ZOMATO_BASE_URL', 'http://localhost:8000/zomato/api/v2.1'),
+        'user_key' => env('ZOMATO_USER_KEY', 'stub'),
     ],
 
     'restaurants' => [
-        'provider' => env('RESTAURANT_PROVIDER', 'mock'),
+        // `zomato` → ZomatoProvider (real HTTP calls).
+        // `fixture` → FixtureProvider (reads JSON directly; used in tests).
+        'provider' => env('RESTAURANT_PROVIDER', 'zomato'),
     ],
 
     'telegram' => [

@@ -3,7 +3,7 @@
 use App\Models\User;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
 it('returns 3 reviews with normalized shape for restaurant 16507621', function () {

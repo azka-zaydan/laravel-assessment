@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
 it('does not throw when zomato daily rate limit counter exceeds 1000', function () {

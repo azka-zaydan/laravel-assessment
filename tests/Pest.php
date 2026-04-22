@@ -138,7 +138,7 @@ function telegramSecretHeader(?string $secret = null): array
  */
 function zomatoFixture(string $name): string
 {
-    $path = base_path('tests/Fixtures/zomato/'.$name);
+    $path = base_path('database/fixtures/zomato/'.$name);
 
     if (! file_exists($path)) {
         throw new RuntimeException("Zomato fixture not found: {$path}");

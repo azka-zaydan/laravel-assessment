@@ -1,7 +1,7 @@
 <?php
 
 beforeEach(function () {
-    config(['services.restaurants.provider' => 'mock']);
+    config(['services.restaurants.provider' => 'fixture']);
 });
 
 it('returns 5 nearby restaurants for valid lat/lon', function () {
