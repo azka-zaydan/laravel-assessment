@@ -10,7 +10,7 @@ This table maps each grading criterion directly to the code that satisfies it.
 
 | # | Criterion | Implementation |
 |---|-----------|----------------|
-| **a** | JWT/Passport authentication + 2FA | Laravel Passport 13 issues JWT access tokens. `POST /api/login` returns either a full token (2FA off) or a short-lived challenge token (`firebase/php-jwt`, `JWT_CHALLENGE_SECRET`). TOTP via `pragmarx/google2fa-laravel`. Full flow in [`app/Http/Controllers/Api/AuthController.php`](app/Http/Controllers/Api/AuthController.php), [`app/Http/Controllers/Api/TwoFactorController.php`](app/Http/Controllers/Api/TwoFactorController.php), [`app/Services/Auth/`](app/Services/Auth/), [`app/Http/Middleware/Require2FA.php`](app/Http/Middleware/Require2FA.php). |
+| **a** | JWT/Passport authentication + 2FA | Laravel Passport 13 issues JWT access tokens. `POST /api/login` returns either a full token (2FA off) or a short-lived challenge token (`firebase/php-jwt`, `JWT_CHALLENGE_SECRET`). TOTP via `pragmarx/google2fa-laravel`. Full lifecycle: `enable → confirm → verify → regenerate → disable` — the final step accepts either a current TOTP or an unused recovery code and nulls all four `two_factor_*` columns in a transaction. Flow in [`app/Http/Controllers/Api/AuthController.php`](app/Http/Controllers/Api/AuthController.php), [`app/Http/Controllers/Api/TwoFactorController.php`](app/Http/Controllers/Api/TwoFactorController.php), [`app/Services/Auth/`](app/Services/Auth/), [`app/Http/Middleware/Require2FA.php`](app/Http/Middleware/Require2FA.php). |
 | **b** | All data in PostgreSQL | `DB_CONNECTION=pgsql` in [`.env.example`](.env.example). Tables: `users`, `restaurants`, `reviews`, `menu_items`, `api_logs`, `telegram_users`, `user_submissions`, `oauth_*`. Write-through caching via [`app/Repositories/RestaurantRepository.php`](app/Repositories/RestaurantRepository.php): every provider response is upserted to Postgres and mirrored in Redis. |
 | **c** | Postman docs + automated tests | Collection at `Postman/collection.json`, environment at `Postman/environment.json`. Published docs: https://documenter.getpostman.com/view/21013457/2sBXqFM2oa. Auto-generated Swagger UI via Scramble at `/docs/api`. Newman integration tests run in CI (job `postman` in [`.github/workflows/ci.yml`](.github/workflows/ci.yml)). |
 | **d** | Design patterns | 9 patterns documented in [`DESIGN_PATTERNS.md`](DESIGN_PATTERNS.md): Repository, Service, Strategy (3 sites), Observer, Singleton, Facade, Pipeline, Adapter, Command. |
@@ -491,7 +491,7 @@ resources/js/admin/
 tests/
   Feature/
     Auth/                   Registration, login, token refresh, logout
-    TwoFactor/              Enable, confirm, verify, recovery codes
+    TwoFactor/              Enable, confirm, verify, recovery codes, disable
     Restaurants/            Search, detail, reviews, menu, nearby
     Telegram/               Webhook dispatch, link flow, each handler type
     Admin/                  API log endpoint filters + pagination
