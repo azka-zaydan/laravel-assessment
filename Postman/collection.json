@@ -250,6 +250,43 @@
             ]
         },
         {
+            "name": "2FA - Disable",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "Accept", "value": "application/json" },
+                    { "key": "Content-Type", "value": "application/json" },
+                    { "key": "Authorization", "value": "Bearer {{user_token}}" }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"password\":\"{{test_password}}\",\"code\":\"123456\"}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/2fa/disable",
+                    "host": ["{{base_url}}"],
+                    "path": ["api", "2fa", "disable"]
+                },
+                "description": "Turn off 2FA for the authenticated account. Requires password + a current 6-digit TOTP code (or one unused recovery code). Nulls two_factor_secret, two_factor_recovery_codes, two_factor_enabled, two_factor_confirmed_at. Gated by `require_2fa` so the session must already be verified."
+            },
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200/403/422', () => pm.expect([200, 403, 422]).to.include(pm.response.code));",
+                            "if (pm.response.code === 200) {",
+                            "    pm.test('Returns disable confirmation message', () => {",
+                            "        pm.expect(pm.response.json().message).to.match(/disabled/i);",
+                            "    });",
+                            "}"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
             "name": "Auth - Login (admin)",
             "request": {
                 "method": "POST",

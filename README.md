@@ -338,8 +338,18 @@ php artisan telegram:set-profile    # register commands, description, short desc
 |-------|-------------|
 | `/admin/login` | Admin login form (issues Passport token stored in React state + httpOnly refresh cookie) |
 | `/admin/logs` | API request log table with column filters, date range, pagination |
-| `/admin/2fa/enroll` | TOTP QR code display + one-time recovery code reveal |
+| `/admin/2fa/enroll` | TOTP QR code display, recovery code reveal, regenerate recovery codes, and disable 2FA (password + TOTP/recovery-code confirmation) |
 | `/admin/2fa/verify` | 2FA challenge verification for admin login flow |
+
+**2FA API endpoints:**
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `POST /api/2fa/enable` | auth:api | Confirm password → issue TOTP secret + `otpauth://` URL (not yet active) |
+| `POST /api/2fa/confirm` | auth:api | Verify first TOTP → flip `two_factor_enabled=true` + issue 8 recovery codes |
+| `POST /api/2fa/verify` | public (throttled 6/min) | Exchange `challenge_token` + TOTP/recovery code for a full Passport access token |
+| `POST /api/2fa/recovery-codes/regenerate` | auth:api + require_2fa | Rotate the 8 recovery codes (password-confirmed) |
+| `POST /api/2fa/disable` | auth:api + require_2fa | Turn off 2FA entirely — password + TOTP-or-recovery-code, nulls all four 2FA columns |
 
 **Default admin credentials** (seeded by `DatabaseSeeder`):
 

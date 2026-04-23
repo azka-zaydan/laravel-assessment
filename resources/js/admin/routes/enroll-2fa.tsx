@@ -94,6 +94,11 @@ function Enroll2FAPage() {
     const [regenerating, setRegenerating] = useState(false);
     const [copied, setCopied] = useState(false);
     const [secretCopied, setSecretCopied] = useState(false);
+    const [disablePassword, setDisablePassword] = useState("");
+    const [disableCode, setDisableCode] = useState("");
+    const [disableError, setDisableError] = useState<string | null>(null);
+    const [disableSuccess, setDisableSuccess] = useState(false);
+    const [disabling, setDisabling] = useState(false);
 
     const secret = extractSecret(otpauthUrl);
 
@@ -150,6 +155,30 @@ function Enroll2FAPage() {
         }
     }
 
+    async function handleDisableSubmit(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        setDisableError(null);
+        setDisabling(true);
+
+        try {
+            await api.post("/2fa/disable", {
+                password: disablePassword,
+                code: disableCode,
+            });
+            setDisablePassword("");
+            setDisableCode("");
+            setRecoveryCodes([]);
+            setDisableSuccess(true);
+            void refetchMe();
+        } catch (err: unknown) {
+            setDisableError(
+                readApiError(err, "Failed to disable 2FA. Check your password and code.")
+            );
+        } finally {
+            setDisabling(false);
+        }
+    }
+
     async function handleCopyAll() {
         try {
             await navigator.clipboard.writeText(recoveryCodes.join("\n"));
@@ -186,15 +215,24 @@ function Enroll2FAPage() {
                     </Card>
                 )}
 
-                {/* Already enabled — show management screen (regenerate recovery codes) */}
+                {!meLoading && !alreadyEnabled && disableSuccess && (
+                    <Alert>
+                        <AlertTitle>2FA disabled</AlertTitle>
+                        <AlertDescription>
+                            Your account is no longer protected by two-factor authentication. You
+                            can re-enroll anytime using the form below.
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {/* Already enabled — show management screen (regenerate recovery codes + disable) */}
                 {!meLoading && alreadyEnabled && (
                     <Card>
                         <CardHeader>
                             <CardTitle>2FA is active</CardTitle>
                             <CardDescription>
-                                Your account is protected by an authenticator app. To disable 2FA,
-                                contact an administrator. You can regenerate your recovery codes
-                                below.
+                                Your account is protected by an authenticator app. Regenerate your
+                                recovery codes below, or scroll down to turn 2FA off entirely.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -247,6 +285,67 @@ function Enroll2FAPage() {
                                     disabled={regenerating || regeneratePassword.length === 0}
                                 >
                                     {regenerating ? "Regenerating…" : "Regenerate recovery codes"}
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Disable 2FA — destructive action shown when 2FA is active */}
+                {!meLoading && alreadyEnabled && (
+                    <Card className="border-destructive/50">
+                        <CardHeader>
+                            <CardTitle className="text-destructive">Disable 2FA</CardTitle>
+                            <CardDescription>
+                                Turn off two-factor authentication for this account. You'll need
+                                your password and a current 6-digit code (or one recovery code).
+                                After disabling, sign-in will only require your password.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleDisableSubmit} className="space-y-4">
+                                {disableError && (
+                                    <Alert variant="destructive">
+                                        <AlertDescription>{disableError}</AlertDescription>
+                                    </Alert>
+                                )}
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="disable-password">Password</Label>
+                                    <Input
+                                        id="disable-password"
+                                        type="password"
+                                        autoComplete="current-password"
+                                        value={disablePassword}
+                                        onChange={(e) => setDisablePassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="disable-code">
+                                        6-digit code or recovery code
+                                    </Label>
+                                    <Input
+                                        id="disable-code"
+                                        type="text"
+                                        inputMode="text"
+                                        placeholder="000000 or XXXX-XXXX"
+                                        autoComplete="one-time-code"
+                                        value={disableCode}
+                                        onChange={(e) => setDisableCode(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    className="w-full"
+                                    disabled={
+                                        disabling ||
+                                        disablePassword.length === 0 ||
+                                        disableCode.length === 0
+                                    }
+                                >
+                                    {disabling ? "Disabling…" : "Disable 2FA"}
                                 </Button>
                             </form>
                         </CardContent>

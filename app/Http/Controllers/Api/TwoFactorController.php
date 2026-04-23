@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TwoFactor\ConfirmRequest;
+use App\Http\Requests\TwoFactor\DisableRequest;
 use App\Http\Requests\TwoFactor\EnableRequest;
 use App\Http\Requests\TwoFactor\RegenerateRequest;
 use App\Http\Requests\TwoFactor\VerifyRequest;
@@ -247,6 +248,80 @@ class TwoFactorController extends Controller
                 false,
                 $opts['same_site'],
             );
+    }
+
+    public function disable(DisableRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        Log::info('2fa.disable.attempt', ['user_id' => $user->id]);
+
+        if (! $user->two_factor_enabled) {
+            Log::warning('2fa.disable.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'not_enabled',
+            ]);
+
+            return response()->json(
+                ['error' => '2FA is not enabled on this account.'],
+                Response::HTTP_FORBIDDEN,
+            );
+        }
+
+        /** @var string $password */
+        $password = $request->validated('password');
+
+        if (! Hash::check($password, $user->password)) {
+            Log::warning('2fa.disable.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'wrong_password',
+            ]);
+
+            return response()->json(
+                ['message' => 'The given data was invalid.', 'errors' => ['password' => ['Wrong password.']]],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        /** @var string $code */
+        $code = $request->validated('code');
+
+        /** @var list<string> $recoveryCodes */
+        $recoveryCodes = is_array($user->two_factor_recovery_codes) ? $user->two_factor_recovery_codes : [];
+
+        $result = $this->twoFactorService->verify($user, $code, $recoveryCodes);
+
+        if ($result === null) {
+            Log::warning('2fa.disable.rejected', [
+                'user_id' => $user->id,
+                'reason' => 'invalid_code',
+            ]);
+
+            return response()->json(
+                ['message' => 'The given data was invalid.', 'errors' => ['code' => ['Invalid TOTP or recovery code.']]],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        DB::transaction(function () use ($user): void {
+            $fresh = User::lockForUpdate()->findOrFail($user->id);
+            $fresh->forceFill([
+                'two_factor_secret' => null,
+                'two_factor_recovery_codes' => null,
+                'two_factor_enabled' => false,
+                'two_factor_confirmed_at' => null,
+            ])->save();
+        });
+
+        Log::info('2fa.disable.success', [
+            'user_id' => $user->id,
+            'method' => $result->method(),
+        ]);
+
+        return response()->json([
+            'message' => '2FA has been disabled.',
+        ]);
     }
 
     public function regenerate(RegenerateRequest $request): JsonResponse

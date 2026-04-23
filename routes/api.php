@@ -36,6 +36,7 @@ Route::middleware('auth:api')->group(function (): void {
 
         Route::middleware('require_2fa')->group(function (): void {
             Route::post('/recovery-codes/regenerate', [TwoFactorController::class, 'regenerate']);
+            Route::post('/disable', [TwoFactorController::class, 'disable']);
         });
     });
 });
