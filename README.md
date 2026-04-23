@@ -196,6 +196,7 @@ Full reference is in [`.env.example`](.env.example). Key variables:
 1. Open Telegram and start a chat with `@BotFather`.
 2. Send `/newbot`, follow prompts, copy the token.
 3. Set `TELEGRAM_BOT_TOKEN=<token>` in `.env`.
+4. *(Optional)* Upload [`bot-profile.png`](bot-profile.png) via `@BotFather` → `/setuserpic`. Everything else (commands, description, name) is installed programmatically by `php artisan telegram:set-profile` — no manual BotFather setup needed.
 
 **Zomato API**
 
@@ -281,10 +282,13 @@ No manual annotation is required — Scramble infers types from FormRequests, AP
 After deploying to a public HTTPS domain:
 
 ```bash
-php artisan telegram:set-webhook
+php artisan telegram:set-webhook    # register the webhook URL + secret
+php artisan telegram:set-profile    # register commands, description, short description, name
 ```
 
-This calls `setWebhook` on the Telegram Bot API using `TELEGRAM_WEBHOOK_URL` and sets the `X-Telegram-Bot-Api-Secret-Token` header guard using `TELEGRAM_WEBHOOK_SECRET`. The `ValidateTelegramSecret` middleware performs a constant-time comparison on every incoming update.
+`set-webhook` calls `setWebhook` using `TELEGRAM_WEBHOOK_URL` and sets the `X-Telegram-Bot-Api-Secret-Token` header guard using `TELEGRAM_WEBHOOK_SECRET`. The `ValidateTelegramSecret` middleware performs a constant-time comparison on every incoming update.
+
+`set-profile` calls `setMyCommands`, `setMyDescription`, `setMyShortDescription`, and `setMyName` — installing the `/`-menu suggestions, the "What can this bot do?" panel content, the 120-char profile-card bio, and the display name. Run once after deploy, and again after any change to [`TelegramSetProfile::COMMANDS`](app/Console/Commands/TelegramSetProfile.php). Pass `--skip-name` on re-runs to avoid Telegram's 2-per-hour name-change rate limit.
 
 > **HTTPS required.** Telegram refuses plain `http://` webhook URLs. Route your Railway domain through Cloudflare with Full Strict TLS enabled.
 
@@ -299,7 +303,32 @@ This calls `setWebhook` on the Telegram Bot API using `TELEGRAM_WEBHOOK_URL` and
 | Photo | `PhotoHandler` |
 | Callback query (inline keyboard) | `CallbackHandler` |
 
-**Bot commands:** `/start` · `/help` · `/search <query>` · `/link <code>`
+**Bot commands:**
+
+| Command | Purpose |
+|---------|---------|
+| `/start` | Personalized welcome + inline quick-action keyboard (Search / Nearby / Help / Settings) and persistent reply keyboard with native `request_location` |
+| `/help` | Sectioned guide: commands, quick actions (no-command flows), account status, and expandable pro tips via `<blockquote expandable>` |
+| `/search <query>` | Restaurant search by name or cuisine — sends numbered venue cards with 🍽️ Menu / ⭐ Reviews inline buttons |
+| `/nearby` | Install a one-shot `request_location` reply keyboard so users don't have to hunt through attachments |
+| `/link <6-digit-code>` | Connect a web account (code issued by `POST /api/telegram/link-code`, 10-minute TTL) |
+| `/settings` | Linked-account status: email, language, linked-at |
+| `/cancel` | Escape hatch — abort the current flow and return to the main menu |
+
+**Quick-action flows (no slash command required):**
+
+- Share your **location** → nearby restaurants (`LocationHandler` sends `find_location` chat action, then up to 5 numbered venue cards)
+- Share a **contact** → saved as a `UserFavorite` (requires a linked account)
+- Send a **photo** → dispatches `ProcessPhotoSubmission` for menu OCR, acknowledges with a processing update
+- Send a **video** → stored as a `UserSubmission` for later review
+
+**Inline callback scheme** (`callback_data`):
+
+| Pattern | Handled by | Effect |
+|---------|------------|--------|
+| `nav:{start\|help\|search\|nearby\|settings}` | `CallbackHandler::handleNav` | Routes to the matching command so inline navigation mirrors slash commands |
+| `menu:<restaurant_id>` | `CallbackHandler::handleMenu` | Daily menu with expandable descriptions per item |
+| `rev:<restaurant_id>:p<page>` | `CallbackHandler::handleReviews` | Paginated reviews (5/page) with « Previous / Next » + star rendering for numeric ratings |
 
 ---
 
@@ -399,10 +428,11 @@ In your Cloudflare dashboard, add a CNAME record on the zone you want to serve t
 
 > Railway's edge certificate is valid for `*.up.railway.app`, not your custom domain. Full (Strict) requires the origin certificate to match the hostname being proxied and will break during edge-certificate rotation. Use plain **Full** — it encrypts Cloudflare ↔ Railway but tolerates Railway's wildcard cert.
 
-After DNS propagates, register the Telegram webhook:
+After DNS propagates, register the Telegram webhook and bot profile:
 
 ```bash
 railway run php artisan telegram:set-webhook
+railway run php artisan telegram:set-profile
 ```
 
 ---
@@ -411,7 +441,7 @@ railway run php artisan telegram:set-webhook
 
 ```
 app/
-  Console/Commands/         TelegramSetWebhook, PruneApiLogs
+  Console/Commands/         TelegramSetWebhook, TelegramSetProfile, PruneApiLogs
   Http/
     Controllers/Api/        AuthController, TwoFactorController, RestaurantController,
                             TelegramWebhookController, TelegramLinkController,
@@ -434,7 +464,8 @@ app/
                             MockProvider, ZomatoProvider
     Telegram/
       Commands/             CommandRegistry, StartCommand, HelpCommand,
-                            SearchCommand, LinkCommand
+                            SearchCommand, LinkCommand, SettingsCommand,
+                            CancelCommand, NearbyCommand
       Handlers/             TextHandler, LocationHandler, ContactHandler,
                             VideoHandler, PhotoHandler, CallbackHandler
       TelegramBotService.php

@@ -33,6 +33,10 @@ class VideoHandler implements MessageHandler
             'raw_update' => $update,
         ]);
 
-        $this->telegram->sendMessage($chatId, 'Got your video. Thanks!');
+        $this->telegram->sendMessage(
+            $chatId,
+            "🎥 <b>Got your video!</b>\n"
+            ."Saved to your submissions. Thanks for contributing!"
+        );
     }
 }

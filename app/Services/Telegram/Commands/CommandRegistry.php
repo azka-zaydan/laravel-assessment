@@ -15,7 +15,7 @@ class CommandRegistry
      */
     public function resolve(string $text): ?array
     {
-        if (! preg_match('/^\/(start|search|link|help)(?:\s+(.*))?$/s', trim($text), $matches)) {
+        if (! preg_match('/^\/(start|search|link|help|settings|cancel|nearby)(?:@\w+)?(?:\s+(.*))?$/s', trim($text), $matches)) {
             return null;
         }
 
@@ -29,6 +29,9 @@ class CommandRegistry
             'help' => $this->container->make(HelpCommand::class),
             'search' => $this->container->make(SearchCommand::class),
             'link' => $this->container->make(LinkCommand::class),
+            'settings' => $this->container->make(SettingsCommand::class),
+            'cancel' => $this->container->make(CancelCommand::class),
+            'nearby' => $this->container->make(NearbyCommand::class),
         };
 
         return [$command, $args];

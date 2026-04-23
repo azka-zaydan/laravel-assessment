@@ -23,11 +23,15 @@ class PhotoHandler implements MessageHandler
             return;
         }
 
-        // Pick the largest photo (last in the array)
+        // Pick the largest photo (last in the array).
         $largestPhoto = end($photos);
 
         if ($largestPhoto === false) {
-            $this->telegram->sendMessage($chatId, 'Could not process photo.');
+            $this->telegram->sendMessage(
+                $chatId,
+                "⚠️ <b>Couldn't read that photo.</b>\n"
+                ."Try sending it again, or send a clearer image of the menu."
+            );
 
             return;
         }
@@ -45,6 +49,12 @@ class PhotoHandler implements MessageHandler
 
         ProcessPhotoSubmission::dispatch($submission->id, (string) $chatId);
 
-        $this->telegram->sendMessage($chatId, 'Got your photo. Processing menu...');
+        $this->telegram->sendMessage(
+            $chatId,
+            "📷 <b>Got your photo!</b>\n"
+            ."I'm processing the menu in the background — this usually takes a few seconds. "
+            ."You'll get a message here as soon as it's done.\n\n"
+            ."<i>Keep using the bot in the meantime:</i> <code>/search</code> or <code>/nearby</code>."
+        );
     }
 }

@@ -280,4 +280,86 @@ class TelegramBotService
     {
         return $this->call('getFile', ['file_id' => $fileId]);
     }
+
+    /**
+     * Register the bot's command list (shown when the user types "/" in chat).
+     *
+     * @param  list<array{command:string,description:string}>  $commands
+     * @param  array<string,mixed>  $extra  Optional scope / language_code.
+     * @return array<string,mixed>
+     *
+     * @throws TelegramApiException
+     */
+    public function setMyCommands(array $commands, array $extra = []): array
+    {
+        return $this->call('setMyCommands', array_merge([
+            'commands' => $commands,
+        ], $extra));
+    }
+
+    /**
+     * Set the bot's long description (shown in the "What can this bot do?" box
+     * for empty chats). Up to 512 characters.
+     *
+     * @return array<string,mixed>
+     *
+     * @throws TelegramApiException
+     */
+    public function setMyDescription(string $description, ?string $languageCode = null): array
+    {
+        $params = ['description' => $description];
+        if ($languageCode !== null) {
+            $params['language_code'] = $languageCode;
+        }
+
+        return $this->call('setMyDescription', $params);
+    }
+
+    /**
+     * Set the bot's short description (shown on the profile page + when shared).
+     * Up to 120 characters.
+     *
+     * @return array<string,mixed>
+     *
+     * @throws TelegramApiException
+     */
+    public function setMyShortDescription(string $shortDescription, ?string $languageCode = null): array
+    {
+        $params = ['short_description' => $shortDescription];
+        if ($languageCode !== null) {
+            $params['language_code'] = $languageCode;
+        }
+
+        return $this->call('setMyShortDescription', $params);
+    }
+
+    /**
+     * Set the bot's public display name.
+     *
+     * @return array<string,mixed>
+     *
+     * @throws TelegramApiException
+     */
+    public function setMyName(string $name, ?string $languageCode = null): array
+    {
+        $params = ['name' => $name];
+        if ($languageCode !== null) {
+            $params['language_code'] = $languageCode;
+        }
+
+        return $this->call('setMyName', $params);
+    }
+
+    /**
+     * Configure the menu button shown in all chats with this bot.
+     *
+     * @param  array<string,mixed>  $menuButton
+     * @return array<string,mixed>
+     *
+     * @throws TelegramApiException
+     */
+    public function setChatMenuButton(array $menuButton): array
+    {
+        return $this->call('setChatMenuButton', ['menu_button' => $menuButton]);
+    }
 }

@@ -25,6 +25,10 @@ class LocationHandler implements MessageHandler
             return;
         }
 
+        // Visual feedback while we hit the restaurant provider. "find_location"
+        // is the Telegram-native status that matches this operation.
+        $this->telegram->sendChatAction($chatId, 'find_location');
+
         $lat = (float) ($location['latitude'] ?? 0);
         $lon = (float) ($location['longitude'] ?? 0);
 
@@ -32,16 +36,40 @@ class LocationHandler implements MessageHandler
         $restaurants = $results['restaurants'];
 
         if ($restaurants === []) {
-            $this->telegram->sendMessage($chatId, 'No nearby restaurants found.');
+            $this->telegram->sendMessage(
+                $chatId,
+                "😕 <b>No nearby restaurants found.</b>\n"
+                ."Try <code>/search &lt;cuisine&gt;</code> or share a location with more coverage.",
+                [
+                    'reply_markup' => [
+                        'inline_keyboard' => [[
+                            ['text' => '🔍 Search instead', 'callback_data' => 'nav:search'],
+                            ['text' => '❓ Help', 'callback_data' => 'nav:help'],
+                        ]],
+                    ],
+                ]
+            );
 
             return;
         }
+
+        $count = count($restaurants);
+
+        // Intro: one message framing the list so venues that follow feel grouped.
+        $this->telegram->sendMessage(
+            $chatId,
+            "📍 <b>Found {$count} spots near you</b>\n"
+            ."<i>Tap any venue to open it in Maps, or use the buttons below each card.</i>"
+        );
+
+        /** @var list<list<array{text:string,callback_data:string}>> $inlineRows */
+        $inlineRows = [];
+        $index = 1;
 
         foreach ($restaurants as $restaurant) {
             $r = $restaurant['restaurant'] ?? $restaurant;
 
             $location = $r['location'] ?? [];
-            // Support both normalized (lat/lon) and raw Zomato (latitude/longitude) formats
             $rLat = (float) ($location['lat'] ?? $location['latitude'] ?? 0);
             $rLon = (float) ($location['lon'] ?? $location['longitude'] ?? 0);
             $name = (string) ($r['name'] ?? 'Unknown');
@@ -50,21 +78,21 @@ class LocationHandler implements MessageHandler
 
             $this->telegram->sendVenue($chatId, $rLat, $rLon, $name, $address);
 
-            $inlineKeyboard = [
-                'inline_keyboard' => [
-                    [
-                        ['text' => 'See menu', 'callback_data' => "menu:{$id}"],
-                        ['text' => 'See reviews', 'callback_data' => "rev:{$id}:p1"],
-                    ],
-                ],
-            ];
-
             $safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $this->telegram->sendMessage(
                 $chatId,
-                "Actions for <b>{$safeName}</b>:",
-                ['reply_markup' => $inlineKeyboard]
+                "<b>{$index}.</b> {$safeName}",
+                [
+                    'reply_markup' => [
+                        'inline_keyboard' => [[
+                            ['text' => '🍽️ Menu', 'callback_data' => "menu:{$id}"],
+                            ['text' => '⭐ Reviews', 'callback_data' => "rev:{$id}:p1"],
+                        ]],
+                    ],
+                ]
             );
+
+            $index++;
         }
     }
 }
