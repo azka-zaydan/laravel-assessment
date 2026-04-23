@@ -30,7 +30,7 @@ class PhotoHandler implements MessageHandler
             $this->telegram->sendMessage(
                 $chatId,
                 "⚠️ <b>Couldn't read that photo.</b>\n"
-                ."Try sending it again, or send a clearer image of the menu."
+                .'Try sending it again, or send a clearer image of the menu.'
             );
 
             return;
@@ -54,7 +54,7 @@ class PhotoHandler implements MessageHandler
             "📷 <b>Got your photo!</b>\n"
             ."I'm processing the menu in the background — this usually takes a few seconds. "
             ."You'll get a message here as soon as it's done.\n\n"
-            ."<i>Keep using the bot in the meantime:</i> <code>/search</code> or <code>/nearby</code>."
+            .'<i>Keep using the bot in the meantime:</i> <code>/search</code> or <code>/nearby</code>.'
         );
     }
 }

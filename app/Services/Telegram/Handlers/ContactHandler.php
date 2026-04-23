@@ -32,7 +32,7 @@ class ContactHandler implements MessageHandler
                 ."Saving contacts as favorites requires a linked account.\n\n"
                 ."1. Generate a 6-digit code in the web app.\n"
                 ."2. Send <code>/link 123456</code> here.\n"
-                ."3. Share the contact again.",
+                .'3. Share the contact again.',
                 [
                     'reply_markup' => [
                         'inline_keyboard' => [[

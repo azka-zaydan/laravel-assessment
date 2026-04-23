@@ -32,7 +32,7 @@ class LinkCommand implements Command
                 ."1. Open the web app &amp; sign in.\n"
                 ."2. Go to <b>Settings → Connect Telegram</b>.\n"
                 ."3. Copy the 6-digit code (valid for 10 minutes).\n"
-                ."4. Send it here: <code>/link 123456</code>"
+                .'4. Send it here: <code>/link 123456</code>'
             );
 
             return;
@@ -45,7 +45,7 @@ class LinkCommand implements Command
             $this->telegram->sendMessage(
                 $chatId,
                 "❌ <b>Invalid or expired code.</b>\n"
-                ."Codes expire after 10 minutes. Generate a fresh one in the web app and try again."
+                .'Codes expire after 10 minutes. Generate a fresh one in the web app and try again.'
             );
 
             return;
@@ -57,7 +57,7 @@ class LinkCommand implements Command
             $this->telegram->sendMessage(
                 $chatId,
                 "❌ <b>Account not found.</b>\n"
-                ."Something went wrong on our end. Please generate a new code and try again."
+                .'Something went wrong on our end. Please generate a new code and try again.'
             );
 
             return;
@@ -84,7 +84,7 @@ class LinkCommand implements Command
             ."<b>What you can do now:</b>\n"
             ."• Share a contact to save it as a favorite.\n"
             ."• Send menu photos — they'll sync to your account.\n"
-            ."• Open <code>/settings</code> to review your link.",
+            .'• Open <code>/settings</code> to review your link.',
             [
                 'reply_markup' => [
                     'inline_keyboard' => [[

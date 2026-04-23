@@ -52,7 +52,7 @@ class HelpCommand implements Command
             ."• Stuck mid-flow? <code>/cancel</code> exits cleanly and returns to the menu.\n"
             ."• Your chat stays private: photos &amp; contacts only save when you act on them.</blockquote>\n\n"
 
-            ."🆘 <i>Something broken? Type <code>/cancel</code> then <code>/start</code> to reset.</i>";
+            .'🆘 <i>Something broken? Type <code>/cancel</code> then <code>/start</code> to reset.</i>';
 
         $inlineKeyboard = [
             'inline_keyboard' => [

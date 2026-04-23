@@ -36,7 +36,7 @@ class VideoHandler implements MessageHandler
         $this->telegram->sendMessage(
             $chatId,
             "🎥 <b>Got your video!</b>\n"
-            ."Saved to your submissions. Thanks for contributing!"
+            .'Saved to your submissions. Thanks for contributing!'
         );
     }
 }

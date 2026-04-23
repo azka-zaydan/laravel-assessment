@@ -39,7 +39,7 @@ class LocationHandler implements MessageHandler
             $this->telegram->sendMessage(
                 $chatId,
                 "😕 <b>No nearby restaurants found.</b>\n"
-                ."Try <code>/search &lt;cuisine&gt;</code> or share a location with more coverage.",
+                .'Try <code>/search &lt;cuisine&gt;</code> or share a location with more coverage.',
                 [
                     'reply_markup' => [
                         'inline_keyboard' => [[
@@ -59,7 +59,7 @@ class LocationHandler implements MessageHandler
         $this->telegram->sendMessage(
             $chatId,
             "📍 <b>Found {$count} spots near you</b>\n"
-            ."<i>Tap any venue to open it in Maps, or use the buttons below each card.</i>"
+            .'<i>Tap any venue to open it in Maps, or use the buttons below each card.</i>'
         );
 
         /** @var list<list<array{text:string,callback_data:string}>> $inlineRows */

@@ -17,7 +17,7 @@ class CancelCommand implements Command
         $chatId = $message['chat']['id'];
 
         $text = "🛑 <b>Cancelled.</b>\n"
-            ."No problem — nothing was saved. Tap a button below or send <code>/start</code> for the main menu.";
+            .'No problem — nothing was saved. Tap a button below or send <code>/start</code> for the main menu.';
 
         $inlineKeyboard = [
             'inline_keyboard' => [

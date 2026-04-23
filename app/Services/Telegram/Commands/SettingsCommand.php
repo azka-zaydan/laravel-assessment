@@ -46,7 +46,7 @@ class SettingsCommand implements Command
             ."📧 <b>Email:</b> <code>{$email}</code>\n"
             ."🌐 <b>Language:</b> <code>{$lang}</code>\n"
             ."🕒 <b>Linked:</b> {$linkedAt}\n\n"
-            ."<blockquote>🔐 Your chat ID is never shared publicly. You can unlink at any time by revoking access in the web app.</blockquote>";
+            .'<blockquote>🔐 Your chat ID is never shared publicly. You can unlink at any time by revoking access in the web app.</blockquote>';
 
         $inlineKeyboard = [
             'inline_keyboard' => [

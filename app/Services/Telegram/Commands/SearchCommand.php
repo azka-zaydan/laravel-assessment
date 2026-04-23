@@ -29,7 +29,7 @@ class SearchCommand implements Command
                 ."• <code>/search ramen</code>\n"
                 ."• <code>/search vegan pizza</code>\n"
                 ."• <code>/search cafe central</code>\n\n"
-                ."<i>Or tap 📍 Nearby to find spots around you.</i>"
+                .'<i>Or tap 📍 Nearby to find spots around you.</i>'
             );
 
             return;
@@ -49,7 +49,7 @@ class SearchCommand implements Command
             $this->telegram->sendMessage(
                 $chatId,
                 "😕 <b>No restaurants found for</b> <code>{$safeQuery}</code>\n"
-                ."Try a different keyword, or share your location for spots nearby.",
+                .'Try a different keyword, or share your location for spots nearby.',
                 [
                     'reply_markup' => [
                         'inline_keyboard' => [[

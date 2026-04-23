@@ -55,7 +55,7 @@ class TextHandler implements MessageHandler
             "🤔 <b>Unknown command.</b>\n"
             ."I didn't recognise that. Tap <code>/help</code> to see everything I can do, or try:\n"
             ."• <code>/search pizza</code>\n"
-            ."• <code>/nearby</code> to find spots around you",
+            .'• <code>/nearby</code> to find spots around you',
             [
                 'reply_markup' => [
                     'inline_keyboard' => [[

@@ -91,7 +91,7 @@ class CallbackHandler implements MessageHandler
                         ."<b>Examples</b>\n"
                         ."• <code>/search ramen</code>\n"
                         ."• <code>/search vegan pizza</code>\n"
-                        ."• <code>/search cafe near central</code>"
+                        .'• <code>/search cafe near central</code>'
                     );
                 }
                 break;
@@ -109,7 +109,7 @@ class CallbackHandler implements MessageHandler
             $this->telegram->sendMessage(
                 $chatId,
                 "📭 <b>No menu available</b> for this restaurant yet.\n"
-                ."Try the reviews tab or search for something else."
+                .'Try the reviews tab or search for something else.'
             );
 
             return;
@@ -164,7 +164,7 @@ class CallbackHandler implements MessageHandler
             $this->telegram->sendMessage(
                 $chatId,
                 "💬 <b>No reviews available</b> for this restaurant yet.\n"
-                ."Be the first to try it!"
+                .'Be the first to try it!'
             );
 
             return;
